@@ -23,5 +23,8 @@
 	// -- environment
 	// Custom
 	"EDGE_ENGINE_PROJECT_ID": "--edgeEngine-project-id--",
+	"HZN_EXCHANGE_URL": "http://localhost:3090/v1/",
+	"HZN_CSS_URL": "http://localhost:9443",
+	"HZN_EXCHANGE_USER_AUTH": "--horizon-exchange-user-auth--",
 	"NODE_ENV": "local"
 }

@@ -2,9 +2,13 @@ const init = require('@bananabread/init');
 const app = require('connect')();
 
 let config = require('./configuration/config');
-const { start } = require('./lib/nodeSyncJob');
+const { startJobs } = require('./lib/jobsHelper');
 
-init(app, __dirname, config, () => Promise.resolve(), { preOps: [start] }).then((result) => {
+init(app, __dirname, config, () => Promise.resolve(), {
+  preOps: [
+    startJobs,
+  ],
+}).then((result) => {
   ({ config } = result);
 });
 

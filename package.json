@@ -38,8 +38,8 @@
   ],
   "private": true,
   "dependencies": {
-    "@bananabread/dynamosizer": "1.5.2",
     "@bananabread/configuration": "3.2.1",
+    "@bananabread/dynamosizer": "1.5.2",
     "@bananabread/init": "3.2.1",
     "@bananabread/oauth-helper": "1.9.1",
     "@bananabread/response-helper": "2.3.2",
@@ -49,6 +49,8 @@
     "bluebird": "3.7.2",
     "connect": "3.7.0",
     "fs-extra": "9.0.1",
+    "get-port": "^5.1.1",
+    "import-fresh": "^3.2.1",
     "lodash": "4.17.20",
     "moment": "2.27.0",
     "request": "2.88.2",

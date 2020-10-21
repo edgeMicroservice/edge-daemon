@@ -3,11 +3,20 @@
 # This script starts or stops the horizon edge node agent in a container. Supports linux and mac os x.
 
 # mimik - Provide following envs to run script
+# Referenced from https://github.com/open-horizon/anax/blob/master/anax-in-container/horizon-container#55a1926
+#
+# To run anax container
 #
 # export HZN_EXCHANGE_URL=http://192.168.1.89:3090/v1/
 # export HZN_FSS_CSSURL=http://192.168.1.89:9443
 #
+#	./deploy_anax.sh start nodeId 8084
+# ./deploy_anax.sh stop nodeId 8084
 #
+# To configure Hzn CLI
+# export HORIZON_URL=http://localhost:8084
+#
+
 
 usage() {
 	cat <<ENDUSAGE
@@ -67,19 +76,18 @@ canonicalPath() {
 	echo "$(cd "$dirName"; pwd -P)/$baseName"
 }
 
-# --- Custom code, isMacAndDefaultIndex no longer needed
 # Bash cant do AND of cmd and checking a string (afaik), so bury it in this function
-# isMacAndDefaultIndex() {
-# 	if isMacos; then
-# 		if [[ "$INDEX_NUM" == "1" ]]; then
-# 			return 0
-# 		else
-# 			return 1
-# 		fi
-# 	else
-# 		return 1
-# 	fi
-# }
+isMacAndDefaultIndex() {
+	if isMacos; then
+		if [[ "$INDEX_NUM" == "1" ]]; then
+			return 0
+		else
+			return 1
+		fi
+	else
+		return 1
+	fi
+}
 
 isSocatRunning() {
 	ps aux | grep -v 'grep ' | grep -q "socat TCP-LISTEN:$SOCAT_LISTEN_PORT"
@@ -136,14 +144,12 @@ checkRequirements() {
 # First arg is optional host default file, second arg has value 'updating' if we are called by restart
 start() {
 	#variables sourced from the default file are available in this script but not its children
-  # --- Custom changes, providing required envs before calling the script ---
-  # --- HZN_EXCHANGE_URL='http://192.168.1.68:3090/v1/', HZN_FSS_CSSURL='http://192.168.1.68:9443'
-	# if [[ -n "$1" ]]; then
-	# 	defaultFileMountArg="-v ${1}:/etc/default/horizon:ro"
-	# 	source $1
-	# else
-	# 	source /etc/default/horizon
-	# fi
+	if [[ -n "$1" ]]; then
+		defaultFileMountArg="-v ${1}:/etc/default/horizon:ro"
+		source $1
+	else
+		source /etc/default/horizon
+	fi
 
 	checkRequirements	# this will exit with msg if requirements are not met
 
@@ -234,9 +240,9 @@ start() {
 	fi
 
 	if [[ -n $HZN_ICP_CA_CERT_PATH ]]; then
-		icpCertMount="-v $HZN_ICP_CA_CERT_PATH:$HZN_ICP_CA_CERT_PATH"
+		icpCertMount="-v $(canonicalPath "$HZN_ICP_CA_CERT_PATH"):$HZN_ICP_CA_CERT_PATH"
 	elif  [[ -n $HZN_MGMT_HUB_CERT_PATH ]]; then
-		icpCertMount="-v $HZN_MGMT_HUB_CERT_PATH:$HZN_MGMT_HUB_CERT_PATH"
+		icpCertMount="-v $(canonicalPath "$HZN_MGMT_HUB_CERT_PATH"):$HZN_MGMT_HUB_CERT_PATH"
 	fi
 
 	# Start the horizon container
@@ -355,24 +361,24 @@ else
 	exit 2
 fi
 
-# --- Custom code, removed default file ---
-# The 3rd arg is optionally the default file
-# if [[ -n "$3" ]]; then
-	# DEFAULT_FILE="$3"
-	# if [[ ! -f "$DEFAULT_FILE" ]]; then
-		# echo "Error: default file '$DEFAULT_FILE' specified, but does not exist on the host."
-		# exit 2
-	# fi
-# else
+# --- Custom code switched 3rd argument to 4th argument 
+# The 4rd arg is optionally the default file
+if [[ -n "$4" ]]; then
+	DEFAULT_FILE="$4"
+	if [[ ! -f "$DEFAULT_FILE" ]]; then
+		echo "Error: default file '$DEFAULT_FILE' specified, but does not exist on the host."
+		exit 2
+	fi
+else
 	# Default file not specified, try /etc/default/horizon
-	# if [[ -f /etc/default/horizon ]]; then
-		# DEFAULT_FILE=/etc/default/horizon
-	# fi
+	if [[ -f /etc/default/horizon ]]; then
+		DEFAULT_FILE=/etc/default/horizon
+	fi
 	# otherwise leave DEFAULT_FILE unset
-# fi
-# if [[ -n "$DEFAULT_FILE" ]]; then
-	# DEFAULT_FILE=$(canonicalPath "$DEFAULT_FILE")
-# fi
+fi
+if [[ -n "$DEFAULT_FILE" ]]; then
+	DEFAULT_FILE=$(canonicalPath "$DEFAULT_FILE")
+fi
 
 
 # --- Custom code, using nodeId and nodePort to configure anax ---
@@ -383,15 +389,15 @@ DOCKER_NAME="anax_$NODE_ID"
 
 case "$1" in
 	start)
-    start
-		# start "$DEFAULT_FILE"
+    # start
+		start "$DEFAULT_FILE"
 		;;
 	stop)
 		stop
 		;;
 	restart|update)
-    restart
-		# restart "$DEFAULT_FILE"
+    # restart
+		restart "$DEFAULT_FILE"
 		;;
 	#status)
 	#	status

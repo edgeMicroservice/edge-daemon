@@ -37,14 +37,23 @@ const deleteNodeById = (id) => Promise.resolve()
     delete nodes[id];
   });
 
-const saveAndReplaceNode = (node, correlationId) => checkIfValidNode(node, correlationId)
+const saveAndUpdateNode = (newNode, correlationId) => checkIfValidNode(newNode, correlationId)
   .catch((err) => {
-    throw getRichError('System', 'Could not saveAndReplace node, invalid format', { node }, err, 'error', correlationId);
+    throw getRichError('System', 'Could not saveAndUpdateNode node, invalid format', { newNode }, err, 'error', correlationId);
   })
-  .then(() => deleteNodeById(node.id))
   .then(() => {
-    nodes[node.id] = node;
-    return node;
+    if (!nodes[newNode.id]) {
+      nodes[newNode.id] = newNode;
+      return newNode;
+    }
+    const updatedNode = { ...nodes[newNode.id], ...newNode };
+    nodes[newNode.id] = updatedNode;
+    return nodes[newNode.id];
+  });
+
+const updateAnaxState = (nodeId, anaxState) => getNodeById(nodeId)
+  .then(() => {
+    nodes[nodeId].anaxState = anaxState;
   });
 
 module.exports = {
@@ -53,5 +62,6 @@ module.exports = {
   getNodeById,
   findNodeById,
   deleteNodeById,
-  saveAndReplaceNode,
+  updateAnaxState,
+  saveAndUpdateNode,
 };

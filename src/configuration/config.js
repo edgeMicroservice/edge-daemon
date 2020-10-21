@@ -33,7 +33,17 @@ module.exports = (() => {
     },
     custom: {
       nodeSync: {
-        jobInterval: parseInt(process.env.NODE_SYNC_JOB_INTERVAL, 10) || 10, // in seconds
+        jobInterval: parseInt(process.env.NODE_SYNC_JOB_INTERVAL, 10) || 60, // in seconds
+      },
+      gatewaySync: {
+        jobInterval: parseInt(process.env.NODE_SYNC_JOB_INTERVAL, 10) || 120,
+      },
+      hzn: {
+        exchangeUrl: process.env.HZN_EXCHANGE_URL,
+        cssUrl: process.env.HZN_CSS_URL,
+        exchangeUserAuth: process.env.HZN_EXCHANGE_USER_AUTH,
+        orgId: process.env.HZN_ORG_ID || 'myorg',
+        defaultNodeToken: process.env.HZN_DEFAULT_NODE_TOKEN || 'nodeToken',
       },
       edgeEngine: {
         url: edgeEngineUrl,
