@@ -12,6 +12,7 @@ const {
   mdeployStatusValues,
   anaxStatusValues,
 } = require('../../util/nodeUtil');
+const { createPolicyFile } = require('./policy');
 
 const initializeGatewayNodes = () => deployAndRegisterAnaxNode(gatewayNodeIds.DOCKER, gatewayNodeIdsPortsMap[gatewayNodeIds.DOCKER])
   .then(() => deployAndRegisterAnaxNode(gatewayNodeIds.EDGE_ENGINE, gatewayNodeIdsPortsMap[gatewayNodeIds.EDGE_ENGINE]));

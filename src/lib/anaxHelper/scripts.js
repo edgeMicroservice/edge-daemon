@@ -60,7 +60,7 @@ const runScriptFile = (scriptFileName, args = '', env = {}, correlationId) => {
   });
 };
 
-const runScriptCommand = (command, env = {}, correlationId) => {
+const runScriptCommand = (command, args = '', env = {}, correlationId) => {
   let scriptEnvs = '';
   Object.keys(env).forEach((envName) => {
     scriptEnvs += `export ${envName}=${env[envName]} && `;
@@ -98,7 +98,7 @@ const runScriptCommand = (command, env = {}, correlationId) => {
   });
 };
 
-const deployAndRegisterAnaxNode = (nodeId, nodePort, correlationId) => {
+const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFile, correlationId) => {
   const successStatement = 'Horizon agent started successfully';
 
   if (deployAndRegisterAnaxRequests[nodeId]) {
@@ -142,6 +142,7 @@ const deployAndRegisterAnaxNode = (nodeId, nodePort, correlationId) => {
           // TODO Shouldnt always resolve
           resolve(runScriptCommand(
             scriptCommandValues.REGISTER_ANAX,
+            undefined,
             {
               HORIZON_URL: `http://localhost:${nodePort}`,
               HZN_EXCHANGE_URL: exchangeUrl,

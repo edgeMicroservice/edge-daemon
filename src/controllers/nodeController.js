@@ -11,6 +11,15 @@ const getNodes = (req, res) => {
     .catch((err) => sendError(err, res, null, options));
 };
 
+const getDaemon = (req, res) => {
+  const options = convertParams(req);
+
+  nodeProcessor.getDaemon(options.id, options.correlationId)
+    .then((results) => sendResult(results, 201, res, options))
+    .catch((err) => sendError(err, res, null, options));
+};
+
 module.exports = {
   getNodes,
+  getDaemon,
 };

@@ -44,6 +44,7 @@ module.exports = (() => {
         exchangeUserAuth: process.env.HZN_EXCHANGE_USER_AUTH,
         orgId: process.env.HZN_ORG_ID || 'myorg',
         defaultNodeToken: process.env.HZN_DEFAULT_NODE_TOKEN || 'nodeToken',
+        nodePoliciesDir: process.env.HZN_POLICIES_DIR || '/etc/default/policies',
       },
       edgeEngine: {
         url: edgeEngineUrl,
