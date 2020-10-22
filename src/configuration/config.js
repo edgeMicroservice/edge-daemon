@@ -45,6 +45,8 @@ module.exports = (() => {
         orgId: process.env.HZN_ORG_ID || 'myorg',
         defaultNodeToken: process.env.HZN_DEFAULT_NODE_TOKEN || 'nodeToken',
         nodePoliciesDir: process.env.HZN_POLICIES_DIR || '/etc/default/policies',
+        anaxContainersPortNumStart: parseInt(process.env.HZN_ANAX_CONTAINERS_PORT_NUM_START, 10) || 8200,
+        anaxContainersPortNumEnd: parseInt(process.env.HZN_ANAX_CONTAINERS_PORT_NUM_END, 10) || 8299,
       },
       edgeEngine: {
         url: edgeEngineUrl,

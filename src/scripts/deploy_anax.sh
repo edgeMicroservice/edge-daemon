@@ -9,9 +9,11 @@
 #
 # export HZN_EXCHANGE_URL=http://192.168.1.89:3090/v1/
 # export HZN_FSS_CSSURL=http://192.168.1.89:9443
+# export ANAX_NODE_ID=nodeId
+# export ANAX_NODE_PORT=8084
 #
-#	./deploy_anax.sh start nodeId 8084
-# ./deploy_anax.sh stop nodeId 8084
+#	./deploy_anax.sh start
+# ./deploy_anax.sh stop
 #
 # To configure Hzn CLI
 # export HORIZON_URL=http://localhost:8084
@@ -226,7 +228,7 @@ start() {
 	# Get the latest horizon image
 	# $HC_DOCKER_IMAGE and $HC_DOCKER_TAG are intentionally undocumented env vars that allow us to test the staging version of the docker image
 	dockerImage='openhorizon/amd64_anax'
-	dockerTag='2.27.0-140'
+	dockerTag='latest'
 	if [[ -n "$HC_DOCKER_IMAGE" ]]; then
 		dockerImage="$HC_DOCKER_IMAGE"
 	fi
@@ -271,13 +273,12 @@ start() {
 	if [[ "$2" == "updating" ]]; then
 		echo "Horizon agent updated/restarted successfully."
 	else
-  # --- Custom code, removed default ---
-		# if isMacAndDefaultIndex; then
+		if isMacAndDefaultIndex; then
 			# hzn on mac sets HORIZON_URL correctly by default for index 1, so the user does not need to do it
-			# echo "Horizon agent started successfully. Now use 'hzn node list', 'hzn register ...', and 'hzn agreement list'"
-		# else
+			echo "Horizon agent started successfully. Now use 'hzn node list', 'hzn register ...', and 'hzn agreement list'"
+		else
 			echo "Horizon agent started successfully. Now export HORIZON_URL=http://localhost:$HORIZON_AGENT_PORT, then use 'hzn node list', 'hzn register ...', and 'hzn agreement list'"
-		# fi
+		fi
 	fi
 }		# end start()
 
@@ -341,30 +342,20 @@ SOCAT_LISTEN_PORT=${SOCAT_LISTEN_PORT:-2375}
 SYSTEM_TYPE=${SYSTEM_TYPE:-$(uname -s)}
 
 # The 2nd arg is optionally the instance number
-# --- Custom code, updated if statement ---
 if [[ -n "$2" ]]; then
-	NODE_ID="$2"
-else
-	echo "Error: Please provide a nodeId (second argument: horizon-container start \$nodeId \$nodePort)"
-	exit 2
-fi
-
-# --- Custom code, added if statement ---
-if [[ -n "$3" ]]; then
-	if [[ "$3" -lt 1 ]]; then
+	if [[ "$2" -lt 1 ]]; then
 		echo "Error: index-num must be > 0"
 		exit 2
 	fi
-	NODE_PORT="$3"
+	INDEX_NUM="$2"
 else
-	echo "Error: Please provide a nodePort (second argument: horizon-container start \$nodeId \$nodePort)"
-	exit 2
+	INDEX_NUM=${ANAX_NODE_ID:-1}
+	ANAX_NODE_PORT=${ANAX_NODE_PORT:-$(( 8080 + $INDEX_NUM ))}
 fi
 
-# --- Custom code switched 3rd argument to 4th argument 
-# The 4rd arg is optionally the default file
-if [[ -n "$4" ]]; then
-	DEFAULT_FILE="$4"
+# The 3rd arg is optionally the default file
+if [[ -n "$3" ]]; then
+	DEFAULT_FILE="$3"
 	if [[ ! -f "$DEFAULT_FILE" ]]; then
 		echo "Error: default file '$DEFAULT_FILE' specified, but does not exist on the host."
 		exit 2
@@ -380,23 +371,18 @@ if [[ -n "$DEFAULT_FILE" ]]; then
 	DEFAULT_FILE=$(canonicalPath "$DEFAULT_FILE")
 fi
 
-
-# --- Custom code, using nodeId and nodePort to configure anax ---
 # use arithmetic addition in case index num is > 9
-HORIZON_AGENT_PORT=$(( $NODE_PORT ))
-DOCKER_NAME="anax_$NODE_ID"
-
+HORIZON_AGENT_PORT=$ANAX_NODE_PORT
+DOCKER_NAME="anax_$INDEX_NUM"
 
 case "$1" in
 	start)
-    # start
 		start "$DEFAULT_FILE"
 		;;
 	stop)
 		stop
 		;;
 	restart|update)
-    # restart
 		restart "$DEFAULT_FILE"
 		;;
 	#status)

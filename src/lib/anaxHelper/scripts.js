@@ -1,3 +1,4 @@
+/* eslint-disable arrow-body-style */
 /* eslint-disable no-unused-vars */
 const Promise = require('bluebird');
 const childProcess = require('child_process');
@@ -66,7 +67,7 @@ const runScriptCommand = (command, args = '', env = {}, correlationId) => {
     scriptEnvs += `export ${envName}=${env[envName]} && `;
   });
 
-  const terminalStatement = `${scriptEnvs} ${command}`;
+  const terminalStatement = `${scriptEnvs} ${command} ${args}`;
   logger.debug(`Running script command: '${command}'`, {
     command, env, terminalStatement, correlationId,
   });
@@ -98,7 +99,8 @@ const runScriptCommand = (command, args = '', env = {}, correlationId) => {
   });
 };
 
-const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFile, correlationId) => {
+const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFilePath, correlationId) => {
+  // eslint-disable-next-line no-unused-vars
   const successStatement = 'Horizon agent started successfully';
 
   if (deployAndRegisterAnaxRequests[nodeId]) {
@@ -115,34 +117,36 @@ const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFile, correlationId) 
 
   const startArgs = [
     scriptFileValues.ANAX_DEPLOYMENT_SCRIPT,
-    `start ${nodeId} ${nodePort}`,
+    'start',
     {
       HZN_EXCHANGE_URL: exchangeUrl,
       HZN_FSS_CSSURL: cssUrl,
+      ANAX_NODE_ID: nodeId,
+      ANAX_NODE_PORT: nodePort,
     },
     correlationId,
   ];
 
   const stopArgs = [...startArgs];
-  stopArgs[1] = `stop ${nodeId} ${nodePort}`;
+  stopArgs[1] = 'stop';
 
-  return runScriptFile(...stopArgs)
+  return runScriptFile(...startArgs)
     .catch(() => { })
     .then(() => runScriptFile(...startArgs))
     .catch((error) => {
       throw getRichError('System', 'Cannot run gateway anax deployment script', { error }, null, 'error');
     })
-    // eslint-disable-next-line arrow-body-style
     .then((output) => {
       return new Promise((resolve, reject) => {
         logger.debug('Waiting timeout before registering node...', {
           nodeId, nodePort, correlationId, timeout: timeoutBWAnaxInitializationAndRegisteration,
         });
         setTimeout(() => {
+          const args = policyFilePath ? ` --policy ${policyFilePath}` : undefined;
           // TODO Shouldnt always resolve
           resolve(runScriptCommand(
             scriptCommandValues.REGISTER_ANAX,
-            undefined,
+            args,
             {
               HORIZON_URL: `http://localhost:${nodePort}`,
               HZN_EXCHANGE_URL: exchangeUrl,
