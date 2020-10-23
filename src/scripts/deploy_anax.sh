@@ -146,6 +146,7 @@ checkRequirements() {
 # First arg is optional host default file, second arg has value 'updating' if we are called by restart
 start() {
 	#variables sourced from the default file are available in this script but not its children
+	# --
 	if [[ -n "$1" ]]; then
 		defaultFileMountArg="-v ${1}:/etc/default/horizon:ro"
 		source $1
@@ -261,12 +262,14 @@ start() {
 		DOCKER_ADD_HOSTS="--add-host=$HZN_EXCHANGE_HOSTS"
 	fi
 
+	DOCKER_SOCKET=${DOCKER_SOCKET:-'/var/run/docker.sock'}
+
 	if isMacos; then
 		DOCKER_HOST=tcp://host.docker.internal:$SOCAT_LISTEN_PORT
 		docker run $DOCKER_ADD_HOSTS -d -t --restart always --name $DOCKER_NAME --privileged -p 127.0.0.1:$HORIZON_AGENT_PORT:$anaxPort -e ANAX_DOCKER_ENDPOINT=${DOCKER_HOST} -e DOCKER_HOST=${DOCKER_HOST} -e HOST_OS=mac -e DOCKER_NAME=${DOCKER_NAME} $defaultFileMountArg $icpCertMount -v ${DOCKER_NAME}_var:/var/horizon/ -v ${DOCKER_NAME}_etc:/etc/horizon/ -v ${fssHostSharePath}:/var/tmp/horizon/${DOCKER_NAME} $dockerImage:$dockerTag
 		checkrc $? "docker run"
 	else
-		docker run $DOCKER_ADD_HOSTS -d -t --restart always --name $DOCKER_NAME --privileged -p 127.0.0.1:$HORIZON_AGENT_PORT:$anaxPort -e DOCKER_NAME=${DOCKER_NAME} -v /var/run/docker.sock:/var/run/docker.sock $defaultFileMountArg $icpCertMount -v ${DOCKER_NAME}_var:/var/horizon/ -v ${DOCKER_NAME}_etc:/etc/horizon/ -v ${fssHostSharePath}:/var/tmp/horizon/${DOCKER_NAME} $dockerImage:$dockerTag
+		docker run $DOCKER_ADD_HOSTS -d -t --restart always --name $DOCKER_NAME --privileged -p 127.0.0.1:$HORIZON_AGENT_PORT:$anaxPort -e DOCKER_NAME=${DOCKER_NAME} -v ${DOCKER_SOCKET}:/var/run/docker.sock $defaultFileMountArg $icpCertMount -v ${DOCKER_NAME}_var:/var/horizon/ -v ${DOCKER_NAME}_etc:/etc/horizon/ -v ${fssHostSharePath}:/var/tmp/horizon/${DOCKER_NAME} $dockerImage:$dockerTag
 		checkrc $? "docker run"
 	fi
 
