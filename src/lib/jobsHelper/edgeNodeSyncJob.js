@@ -6,7 +6,7 @@ const logger = require('@bananabread/sumologic-winston-logger');
 
 const { saveAndUpdateNode } = require('../../models/nodeModel');
 
-// const { nodeSync } = require('../../configuration/config');
+const { nodeSync } = require('../../configuration/config');
 const {
   getNodes,
   getClient,
@@ -89,7 +89,7 @@ const start = () => getClient()
   })
   .then(() => {
     syncNodes();
-    // setInterval(syncNodes, nodeSync.jobInterval * 1000);
+    setInterval(syncNodes, nodeSync.jobInterval * 1000);
   });
 
 module.exports = {
