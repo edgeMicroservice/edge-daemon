@@ -13,7 +13,6 @@ const httpRequester = require('./httpRequester');
 
 const { formatToJson } = require('./httpJson');
 
-const { addLogsById } = require('../../models/daemonModel');
 const makeLogger = require('./logger');
 
 const initializeSocket = (nodeId) => {
