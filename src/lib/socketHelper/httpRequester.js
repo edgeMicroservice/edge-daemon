@@ -26,7 +26,7 @@ const makeHttpRequester = (nodeId) => {
     });
     if (method === 'POST') {
       log('===> sending mdeploy post request');
-      getCurrentNode.then((gatewayNode) => rp({
+      getCurrentNode().then((gatewayNode) => rp({
         uri: `${mdeployUrl}/batchOps`,
         method: 'POST',
         body: {
