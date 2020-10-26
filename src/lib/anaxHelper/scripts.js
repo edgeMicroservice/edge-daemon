@@ -103,8 +103,11 @@ const runScriptCommand = (command, args = '', env = {}, correlationId) => {
 
 const updateHznCliConfig = (nodeId) => {
   console.log('===> in updateHznCliConfig');
-  const configFileData = `HZN_EXCHANGE_URL=${exchangeUrl}\nHZN_FSS_CSSURL=${cssUrl}\nHZN_DEVICE_ID=${nodeId}\n`
+  const configFileData = `HZN_EXCHANGE_URL=${exchangeUrl}\nHZN_FSS_CSSURL=${cssUrl}\nHZN_DEVICE_ID=${nodeId}\n`;
   return fs.ensureFile(cliConfigFile)
+    .then(() => {
+      console.log('===> here 1');
+    })
     .then(() => fs.writeFile(configFileData))
     .then((result) => {
       console.log('===> result in updateHznCliConfig', result);
