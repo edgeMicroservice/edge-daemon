@@ -108,7 +108,8 @@ const initializeSocket = (nodeId) => {
       .then(() => {
         server = createServer(SOCKET_FILE);
         fs.chmodSync(SOCKET_FILE, 777);
-      }));
+      }))
+    .then(() => SOCKET_FILE);
 
   // fs.stat(SOCKET_FILE, (err, stats) => {
   //   if (err) {
