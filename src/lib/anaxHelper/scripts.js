@@ -22,7 +22,7 @@ const {
   scriptCommandValues,
 } = require('./util');
 
-const timeoutBWAnaxInitializationAndRegisteration = 10000; // 10 seconds in milliseconds
+const timeoutBWAnaxInitializationAndRegisteration = 5000; // 10 seconds in milliseconds
 const deployAndRegisterAnaxRequests = {};
 
 const runScriptFile = (scriptFileName, args = '', env = {}, correlationId) => {
@@ -102,9 +102,9 @@ const runScriptCommand = (command, args = '', env = {}, correlationId) => {
 };
 
 const updateHznCliConfig = (nodeId) => {
-  const configFileData = `HZN_EXCHANGE_URL=${exchangeUrl}\nHZN_FSS_CSSURL=${cssUrl}\nHZN_DEVICE_ID=${}\n`
-  fs.ensureFile(cliConfigFile)
-    .then(() => fs.writeFile())
+  const configFileData = `HZN_EXCHANGE_URL=${exchangeUrl}\nHZN_FSS_CSSURL=${cssUrl}\nHZN_DEVICE_ID=${nodeId}\n`
+  return fs.ensureFile(cliConfigFile)
+    .then(() => fs.writeFile(configFileData));
 };
 
 const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFilePath, correlationId) => {
@@ -152,18 +152,19 @@ const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFilePath, correlation
         setTimeout(() => {
           const args = policyFilePath ? ` --policy ${policyFilePath}` : undefined;
           // TODO Shouldnt always resolve
-          resolve(runScriptCommand(
-            scriptCommandValues.REGISTER_ANAX,
-            args,
-            {
-              HORIZON_URL: `http://localhost:${nodePort}`,
-              HZN_EXCHANGE_URL: exchangeUrl,
-              HZN_EXCHANGE_USER_AUTH: exchangeUserAuth,
-              HZN_ORG_ID: orgId,
-              HZN_EXCHANGE_NODE_AUTH: `${nodeId}:${defaultNodeToken}`,
-            },
-            correlationId,
-          ));
+          resolve(updateHznCliConfig(nodeId)
+            .then(() => runScriptCommand(
+              scriptCommandValues.REGISTER_ANAX,
+              args,
+              {
+                HORIZON_URL: `http://localhost:${nodePort}`,
+                HZN_EXCHANGE_URL: exchangeUrl,
+                HZN_EXCHANGE_USER_AUTH: exchangeUserAuth,
+                HZN_ORG_ID: orgId,
+                HZN_EXCHANGE_NODE_AUTH: `${nodeId}:${defaultNodeToken}`,
+              },
+              correlationId,
+            )));
         }, timeoutBWAnaxInitializationAndRegisteration);
       });
       // console.log('===> output 2', output);

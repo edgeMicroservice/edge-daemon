@@ -13,24 +13,24 @@ const createPolicyFile = (nodeId, properties = [], constraints = [], correlation
 
   const filePath = `${nodePoliciesDir}/policy_${nodeId}.json`;
   return fs.ensureDir(nodePoliciesDir)
-  .then(() => fs.writeJSON(filePath, { properties, constraints })
-  .then((savedFile) => {
-    console.log('===> savedFile', savedFile);
-    return filePath;
-  })
-  .catch((error) => {
-    console.log('===> Error occured while writing policy file', error);
-    throw getRichError(
-      'System', 'Error occured while writing policy file',
-      {
-        nodeId,
-        properties,
-        constraints,
-        error,
-      },
-      null, 'error', correlationId,
-    );
-  }));
+    .then(() => fs.writeJSON(filePath, { properties, constraints })
+      .then((savedFile) => {
+        console.log('===> savedFile', savedFile);
+        return filePath;
+      })
+      .catch((error) => {
+        console.log('===> Error occured while writing policy file', error);
+        throw getRichError(
+          'System', 'Error occured while writing policy file',
+          {
+            nodeId,
+            properties,
+            constraints,
+            error,
+          },
+          null, 'error', correlationId,
+        );
+      }));
 };
 
 module.exports = {
