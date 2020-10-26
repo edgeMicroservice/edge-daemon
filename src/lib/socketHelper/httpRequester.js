@@ -4,11 +4,11 @@ const rp = require('request-promise');
 const config = require('../../configuration/config');
 
 const mdeployUrl = config.dependencies.MDEPLOY.url;
-const { addLogsById } = require('../../models/daemonModel');
 const { getCurrentNode } = require('../../external/jsonRPCRequests');
+const makeLogger = require('./logger');
 
 const makeHttpRequester = (nodeId) => {
-  const log = (text) => addLogsById(nodeId, text);
+  const { log } = makeLogger(nodeId);
 
   const request = ({
     method,

@@ -14,14 +14,15 @@ const httpRequester = require('./httpRequester');
 const { formatToJson } = require('./httpJson');
 
 const { addLogsById } = require('../../models/daemonModel');
+const makeLogger = require('./logger');
 
 const initializeSocket = (nodeId) => {
+  const { log } = makeLogger(nodeId);
+
   const connections = {};
   let SHUTDOWN = false;
   const SOCKET_FILE = `${nodeSocketsDir}/edgeDaemon_${nodeId}.sock`;
   let server;
-
-  const log = (text) => addLogsById(nodeId, text);
 
   log('Loading interprocess communications test');
 
