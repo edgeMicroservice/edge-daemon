@@ -1,4 +1,4 @@
-const { addLogsById } = require('../../models/daemonModel');
+// const { addLogsById } = require('../../models/daemonModel');
 
 const makeLogger = (nodeId) => {
   const log = (text, data) => {

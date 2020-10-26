@@ -3,12 +3,12 @@ const http = require('http');
 const Promise = require('bluebird');
 const { response } = require('express');
 
-const { addLogsById } = require('../../models/daemonModel');
+const makeLogger = require('./logger');
 
 const makeSockerRequester = (nodeId) => {
   const SOCKET_FILE = `/var/run/edgeDaemon_${nodeId}.sock`;
 
-  const log = (text) => addLogsById(nodeId, text);
+  const { log } = makeLogger(nodeId);
 
   const request = ({
     method,
