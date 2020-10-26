@@ -53,22 +53,24 @@ const initializeSocket = (nodeId) => {
 
         makeHttpRequester(nodeId).request(formattedRequest);
 
-        makeSockerRequester(nodeId).request(formattedRequest)
-          .then((data) => {
-            log('in then: ', data);
-            if (data) {
-              log('===> 1');
+        setTimeout(() => {
+          makeSockerRequester(nodeId).request(formattedRequest)
+            .then((data) => {
+              log('in then: ', data);
+              if (data) {
+                log('===> 1');
+                stream.write(data);
+              }
+              else {
+                log('===> 2');
+                // stream.emit('close')
+              }
+            })
+            .catch((data) => {
+              log('in catch');
               stream.write(data);
-            }
-            else {
-              log('===> 2');
-              // stream.emit('close')
-            }
-          })
-          .catch((data) => {
-            log('in catch');
-            stream.write(data);
-          });
+            });
+        }, 3000);
       });
     })
       .listen(socket)
