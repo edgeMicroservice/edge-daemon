@@ -66,7 +66,8 @@ const initializeSocket = (nodeId) => {
                   log('===> 2');
                   // stream.emit('close')
                 }
-              } catch (error) {
+              }
+              catch (error) {
                 console.log('===> error occured while writing data to stream', error);
               }
             })

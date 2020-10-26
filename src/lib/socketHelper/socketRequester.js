@@ -6,7 +6,7 @@ const { response } = require('express');
 const makeLogger = require('./logger');
 
 const makeSockerRequester = (nodeId) => {
-  const SOCKET_FILE = `/var/run/edgeDaemon_${nodeId}.sock`;
+  const DOCKER_SOCKET_FILE = '/var/run/docker.sock';
 
   const { log } = makeLogger(nodeId);
 
@@ -20,7 +20,7 @@ const makeSockerRequester = (nodeId) => {
     // resolve();
     // return;
     const options = {
-      socketPath: SOCKET_FILE,
+      socketPath: DOCKER_SOCKET_FILE,
       path: endpoint,
       method,
     };
