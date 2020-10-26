@@ -152,7 +152,7 @@ const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFilePath, correlation
         setTimeout(() => {
           const args = policyFilePath ? ` --policy ${policyFilePath}` : undefined;
           // TODO Shouldnt always resolve
-          resolve(updateHznCliConfig(nodeId)
+          updateHznCliConfig(nodeId)
             .then(() => runScriptCommand(
               scriptCommandValues.REGISTER_ANAX,
               args,
@@ -164,7 +164,13 @@ const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFilePath, correlation
                 HZN_EXCHANGE_NODE_AUTH: `${nodeId}:${defaultNodeToken}`,
               },
               correlationId,
-            )));
+            ))
+            .then((result) => {
+              resolve(result);
+            })
+            .catch((error) => {
+              reject(error);
+            });
         }, timeoutBWAnaxInitializationAndRegisteration);
       });
       // console.log('===> output 2', output);
