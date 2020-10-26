@@ -2,6 +2,7 @@
 /* eslint-disable no-unused-vars */
 const Promise = require('bluebird');
 const childProcess = require('child_process');
+const fs = require('fs-extra');
 
 const logger = require('@bananabread/sumologic-winston-logger');
 const { getRichError } = require('@bananabread/response-helper');
@@ -10,6 +11,7 @@ const {
   hzn: {
     exchangeUrl,
     cssUrl,
+    cliConfigFile,
     exchangeUserAuth,
     orgId,
     defaultNodeToken,
@@ -29,7 +31,7 @@ const runScriptFile = (scriptFileName, args = '', env = {}, correlationId) => {
     scriptEnvs += `export ${envName}=${env[envName]} && `;
   });
 
-  const terminalStatement = `${scriptEnvs} sh src/scripts/${scriptFileName} ${args}`;
+  const terminalStatement = `${scriptEnvs} src/scripts/${scriptFileName} ${args}`;
   logger.debug(`Running script file: ${scriptFileName}`, {
     scriptFileName, args, env, terminalStatement, correlationId,
   });
@@ -97,6 +99,12 @@ const runScriptCommand = (command, args = '', env = {}, correlationId) => {
       reject(error);
     }
   });
+};
+
+const updateHznCliConfig = (nodeId) => {
+  const configFileData = `HZN_EXCHANGE_URL=${exchangeUrl}\nHZN_FSS_CSSURL=${cssUrl}\nHZN_DEVICE_ID=${}\n`
+  fs.ensureFile(cliConfigFile)
+    .then(() => fs.writeFile())
 };
 
 const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFilePath, correlationId) => {
