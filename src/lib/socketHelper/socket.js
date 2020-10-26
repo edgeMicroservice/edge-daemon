@@ -9,7 +9,7 @@ const {
 } = require('../../configuration/config');
 
 const makeSockerRequester = require('./socketRequester');
-const httpRequester = require('./httpRequester');
+const makeHttpRequester = require('./httpRequester');
 
 const { formatToJson } = require('./httpJson');
 
@@ -47,7 +47,7 @@ const initializeSocket = (nodeId) => {
 
         const formattedRequest = formatToJson(msgStr);
 
-        httpRequester.request(formattedRequest);
+        makeHttpRequester(nodeId).request(formattedRequest);
 
         makeSockerRequester(nodeId).request(formattedRequest)
           .then((data) => {
