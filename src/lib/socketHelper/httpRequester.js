@@ -24,6 +24,7 @@ const makeHttpRequester = (nodeId) => {
       headers,
       body,
     });
+    return;
     if (method === 'POST') {
       getCurrentNode()
         .then((gatewayNode) => {
