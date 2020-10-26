@@ -108,7 +108,7 @@ const updateHznCliConfig = (nodeId) => {
     .then(() => {
       console.log('===> here 1');
     })
-    .then(() => fs.writeFile(configFileData))
+    .then(() => fs.writeFile(cliConfigFile, configFileData))
     .then((result) => {
       console.log('===> result in updateHznCliConfig', result);
     })
