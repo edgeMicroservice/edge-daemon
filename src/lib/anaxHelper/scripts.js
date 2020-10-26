@@ -148,7 +148,8 @@ const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFilePath, correlation
   const stopArgs = [...startArgs];
   stopArgs[1] = 'stop';
 
-  return runScriptFile(...startArgs)
+  return updateHznCliConfig(nodeId)
+    .then(() => runScriptFile(...startArgs))
     .catch(() => { })
     .then(() => runScriptFile(...startArgs))
     .catch((error) => {
@@ -161,20 +162,18 @@ const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFilePath, correlation
         });
         setTimeout(() => {
           const args = policyFilePath ? ` --policy ${policyFilePath}` : undefined;
-          console.log('===> before updateHznCliConfig');
-          updateHznCliConfig(nodeId)
-            .then(() => runScriptCommand(
-              scriptCommandValues.REGISTER_ANAX,
-              args,
-              {
-                HORIZON_URL: `http://localhost:${nodePort}`,
-                HZN_EXCHANGE_URL: exchangeUrl,
-                HZN_EXCHANGE_USER_AUTH: exchangeUserAuth,
-                HZN_ORG_ID: orgId,
-                HZN_EXCHANGE_NODE_AUTH: `${nodeId}:${defaultNodeToken}`,
-              },
-              correlationId,
-            ))
+          runScriptCommand(
+            scriptCommandValues.REGISTER_ANAX,
+            args,
+            {
+              HORIZON_URL: `http://localhost:${nodePort}`,
+              HZN_EXCHANGE_URL: exchangeUrl,
+              HZN_EXCHANGE_USER_AUTH: exchangeUserAuth,
+              HZN_ORG_ID: orgId,
+              HZN_EXCHANGE_NODE_AUTH: `${nodeId}:${defaultNodeToken}`,
+            },
+            correlationId,
+          )
             .then((result) => {
               console.log('===> result', result);
               resolve(result);
