@@ -141,6 +141,7 @@ const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFilePath, correlation
       HZN_FSS_CSSURL: cssUrl,
       ANAX_NODE_ID: nodeId,
       ANAX_NODE_PORT: nodePort,
+      HORIZON_URL: `http://localhost:${nodePort}`, // test only
     },
     correlationId,
   ];
@@ -149,7 +150,7 @@ const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFilePath, correlation
   stopArgs[1] = 'stop';
 
   return updateHznCliConfig(nodeId)
-    .then(() => runScriptFile(...startArgs))
+    .then(() => runScriptFile(...stopArgs))
     .catch(() => { })
     .then(() => runScriptFile(...startArgs))
     .catch((error) => {
@@ -163,8 +164,8 @@ const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFilePath, correlation
         setTimeout(() => {
           const args = policyFilePath ? ` --policy ${policyFilePath}` : undefined;
           runScriptCommand(
-            scriptCommandValues.REGISTER_ANAX,
-            args,
+            'hzn env',
+            undefined,
             {
               HORIZON_URL: `http://localhost:${nodePort}`,
               HZN_EXCHANGE_URL: exchangeUrl,
@@ -172,16 +173,27 @@ const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFilePath, correlation
               HZN_ORG_ID: orgId,
               HZN_EXCHANGE_NODE_AUTH: `${nodeId}:${defaultNodeToken}`,
             },
-            correlationId,
           )
-            .then((result) => {
-              console.log('===> result', result);
-              resolve(result);
-            })
-            .catch((error) => {
-              console.log('===> error', error);
-              reject(error);
-            });
+            .then(() => runScriptCommand(
+              scriptCommandValues.REGISTER_ANAX,
+              args,
+              {
+                HORIZON_URL: `http://localhost:${nodePort}`,
+                HZN_EXCHANGE_URL: exchangeUrl,
+                HZN_EXCHANGE_USER_AUTH: exchangeUserAuth,
+                HZN_ORG_ID: orgId,
+                HZN_EXCHANGE_NODE_AUTH: `${nodeId}:${defaultNodeToken}`,
+              },
+              correlationId,
+            )
+              .then((result) => {
+                console.log('===> result', result);
+                resolve(result);
+              })
+              .catch((error) => {
+                console.log('===> error', error);
+                reject(error);
+              }));
         }, timeoutBWAnaxInitializationAndRegisteration);
       });
       // console.log('===> output 2', output);
