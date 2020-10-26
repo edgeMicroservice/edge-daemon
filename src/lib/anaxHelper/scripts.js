@@ -117,7 +117,7 @@ const updateHznCliConfig = (nodeId) => {
     });
 };
 
-const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFilePath, correlationId) => {
+const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFilePath, dockerSocketFilePath, correlationId) => {
   // eslint-disable-next-line no-unused-vars
   const successStatement = 'Horizon agent started successfully';
 
@@ -133,9 +133,9 @@ const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFilePath, correlation
     nodeId, nodePort, correlationId,
   });
 
-  const startArgs = [
+  const scriptArgs = [
     scriptFileValues.ANAX_DEPLOYMENT_SCRIPT,
-    'start',
+    undefined,
     {
       HZN_EXCHANGE_URL: exchangeUrl,
       HZN_FSS_CSSURL: cssUrl,
@@ -146,7 +146,14 @@ const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFilePath, correlation
     correlationId,
   ];
 
-  const stopArgs = [...startArgs];
+  if (dockerSocketFilePath) {
+    scriptArgs[2].DOCKER_SOCKET = dockerSocketFilePath;
+  }
+
+  const startArgs = [...scriptArgs];
+  startArgs[1] = 'start';
+
+  const stopArgs = [...scriptArgs];
   stopArgs[1] = 'stop';
 
   return updateHznCliConfig(nodeId)
@@ -162,7 +169,7 @@ const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFilePath, correlation
           nodeId, nodePort, correlationId, timeout: timeoutBWAnaxInitializationAndRegisteration,
         });
         setTimeout(() => {
-          const args = policyFilePath ? ` --policy ${policyFilePath}` : undefined;
+          const cmdArgs = policyFilePath ? ` --policy ${policyFilePath}` : undefined;
           runScriptCommand(
             'hzn env',
             undefined,
@@ -176,7 +183,7 @@ const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFilePath, correlation
           )
             .then(() => runScriptCommand(
               scriptCommandValues.REGISTER_ANAX,
-              args,
+              cmdArgs,
               {
                 HORIZON_URL: `http://localhost:${nodePort}`,
                 HZN_EXCHANGE_URL: exchangeUrl,

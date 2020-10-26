@@ -1,6 +1,12 @@
 /* eslint-disable no-unused-vars */
 const net = require('net');
-const fs = require('fs');
+const fs = require('fs-extra');
+
+const {
+  hzn: {
+    nodeSocketsDir,
+  },
+} = require('../../configuration/config');
 
 const makeSockerRequester = require('./socketRequester');
 const httpRequester = require('./httpRequester');
@@ -12,7 +18,7 @@ const { addLogsById } = require('../../models/daemonModel');
 const initializeSocket = (nodeId) => {
   const connections = {};
   let SHUTDOWN = false;
-  const SOCKET_FILE = `/var/run/edgeDaemon_${nodeId}.sock`;
+  const SOCKET_FILE = `${nodeSocketsDir}/edgeDaemon_${nodeId}.sock`;
   let server;
 
   const log = (text) => addLogsById(nodeId, text);
@@ -73,24 +79,6 @@ const initializeSocket = (nodeId) => {
   }
 
   log('Checking for leftover socket.');
-  fs.stat(SOCKET_FILE, (err, stats) => {
-    if (err) {
-      // start server
-      log('No leftover socket found.');
-      server = createServer(SOCKET_FILE);
-      fs.chmodSync(SOCKET_FILE, 777);
-      return;
-    }
-    // remove file then start server
-    log('Removing leftover socket.');
-    fs.unlink(SOCKET_FILE, (error) => {
-      if (err) {
-        // This should never happen.
-        log(error); process.exit(0);
-      }
-      server = createServer(SOCKET_FILE);
-    });
-  });
 
   function cleanup() {
     if (!SHUTDOWN) {
@@ -109,6 +97,37 @@ const initializeSocket = (nodeId) => {
     }
   }
   process.on('SIGINT', cleanup);
+
+  return fs.ensureDir(nodeSocketsDir)
+    .then(() => fs.stat(SOCKET_FILE)
+      .then(() => fs.unlink(SOCKET_FILE)
+        .catch((error) => {
+          console.log('===> error occured while removing old socket file', error);
+        }))
+      .catch(() => { })
+      .then(() => {
+        server = createServer(SOCKET_FILE);
+        fs.chmodSync(SOCKET_FILE, 777);
+      }));
+
+  // fs.stat(SOCKET_FILE, (err, stats) => {
+  //   if (err) {
+  //     // start server
+  //     log('No leftover socket found.');
+  //     server = createServer(SOCKET_FILE);
+  //     fs.chmodSync(SOCKET_FILE, 777);
+  //     return;
+  //   }
+  //   // remove file then start server
+  //   log('Removing leftover socket.');
+  //   fs.unlink(SOCKET_FILE, (error) => {
+  //     if (err) {
+  //       // This should never happen.
+  //       log(error); process.exit(0);
+  //     }
+  //     server = createServer(SOCKET_FILE);
+  //   });
+  // });
 };
 
 module.exports = {
