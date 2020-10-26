@@ -38,6 +38,10 @@ const initializeSocket = (nodeId) => {
         delete connections[self];
       });
 
+      stream.on('error', (err) => {
+        console.log('===> error on incoming socket stream: ', err);
+      });
+
       stream.on('data', (msg) => {
         const msgStr = msg.toString();
 

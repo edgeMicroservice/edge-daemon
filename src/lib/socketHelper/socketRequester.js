@@ -56,6 +56,7 @@ const makeSockerRequester = (nodeId) => {
     }
     catch (e) {
       console.log('===> MAJOR ERROR ALERT', e);
+      resolve();
     }
   });
 
