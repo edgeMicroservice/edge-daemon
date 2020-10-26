@@ -17,6 +17,8 @@ const makeSockerRequester = (nodeId) => {
     headers,
     body,
   }) => new Promise((resolve, reject) => {
+    resolve();
+    return;
     const options = {
       socketPath: SOCKET_FILE,
       path: endpoint,
