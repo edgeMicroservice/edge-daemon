@@ -57,7 +57,7 @@ const makeHttpRequester = (nodeId) => {
             })
             .catch((error) => {
               log('===> failure response from mdeploy', error);
-            })
+            });
         });
     }
   };
