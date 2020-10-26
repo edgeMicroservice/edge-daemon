@@ -102,9 +102,16 @@ const runScriptCommand = (command, args = '', env = {}, correlationId) => {
 };
 
 const updateHznCliConfig = (nodeId) => {
+  console.log('===> in updateHznCliConfig');
   const configFileData = `HZN_EXCHANGE_URL=${exchangeUrl}\nHZN_FSS_CSSURL=${cssUrl}\nHZN_DEVICE_ID=${nodeId}\n`
   return fs.ensureFile(cliConfigFile)
-    .then(() => fs.writeFile(configFileData));
+    .then(() => fs.writeFile(configFileData))
+    .then((result) => {
+      console.log('===> result in updateHznCliConfig', result);
+    })
+    .catch((error) => {
+      console.log('===> error in updateHznCliConfig', error);
+    });
 };
 
 const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFilePath, correlationId) => {
@@ -151,7 +158,7 @@ const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFilePath, correlation
         });
         setTimeout(() => {
           const args = policyFilePath ? ` --policy ${policyFilePath}` : undefined;
-          // TODO Shouldnt always resolve
+          console.log('===> before updateHznCliConfig');
           updateHznCliConfig(nodeId)
             .then(() => runScriptCommand(
               scriptCommandValues.REGISTER_ANAX,
@@ -166,9 +173,11 @@ const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFilePath, correlation
               correlationId,
             ))
             .then((result) => {
+              console.log('===> result', result);
               resolve(result);
             })
             .catch((error) => {
+              console.log('===> error', error);
               reject(error);
             });
         }, timeoutBWAnaxInitializationAndRegisteration);
