@@ -36,16 +36,11 @@ const makeHttpRequester = (nodeId) => {
                 nodeId,
               ],
               request: {
-                endpoint: '/containers',
+                endpoint: '/images',
                 method: 'POST',
                 body: {
-                  name: 'mreport-v1',
-                  imageName: 'mreport-v1',
-                  env: {
-                    'MCM.BASE_API_PATH': '/mreport/v1',
-                    'MCM.WEBSOCKET_SUPPORT': 'true',
-                  },
-                  imageHostNodeId: gatewayNode.nodeId,
+                  nodeId: gatewayNode.nodeId,
+                  imageId: `${config.edgeEngine.projectId}-mreport-v1`,
                 },
               },
             },
@@ -72,3 +67,27 @@ const makeHttpRequester = (nodeId) => {
 };
 
 module.exports = makeHttpRequester;
+
+// const options = {
+//   uri: `${mdeployUrl}/batchOps`,
+//   method: 'POST',
+//   body: {
+//     nodes: [
+//       nodeId,
+//     ],
+//     request: {
+//       endpoint: '/containers',
+//       method: 'POST',
+//       body: {
+//         name: 'mreport-v1',
+//         imageName: 'mreport-v1',
+//         env: {
+//           'MCM.BASE_API_PATH': '/mreport/v1',
+//           'MCM.WEBSOCKET_SUPPORT': 'true',
+//         },
+//         imageHostNodeId: gatewayNode.nodeId,
+//       },
+//     },
+//   },
+//   json: true,
+// };
