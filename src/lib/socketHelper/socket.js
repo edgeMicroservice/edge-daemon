@@ -74,6 +74,7 @@ const initializeSocket = (nodeId) => {
             .catch((data) => {
               log('in catch');
               stream.write(data);
+              stream.emit('close');
             });
         }, 3000);
       });

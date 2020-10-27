@@ -32,12 +32,12 @@ const makeSockerRequester = (nodeId) => {
         res.setEncoding('utf8');
         res.on('data', (data) => {
           log('===> docker response data: ', data);
-          resolve(data);
+          if (data) resolve(data);
         });
-        // res.on('error', (data) => {
-        //   log('===> ERROR docker response error: ', data);
-        //   reject(data);
-        // });
+        res.on('error', (data) => {
+          log('===> ERROR docker response error: ', data);
+          reject(data);
+        });
         res.on('close', (data) => {
           if (!data) {
             log('nothing to see');
@@ -47,7 +47,7 @@ const makeSockerRequester = (nodeId) => {
         });
         // res.on('*', data => {
         //   log('===> dekho', data);
-        // })
+        // });
       };
 
       log('===> docker request data: ', options);
