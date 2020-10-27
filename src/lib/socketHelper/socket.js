@@ -63,7 +63,7 @@ const initializeSocket = (nodeId) => {
                 'Content-Encoding: UTF-8',
                 'Accept-Ranges: bytes',
                 'Connection: keep-alive',
-              ].join('\n')}\n\n`);
+              ].join('\r\n')}\r\n\r\n`);
 
               stream.write(responses.join(''));
               // responses.forEach((response) => {
@@ -89,9 +89,6 @@ const initializeSocket = (nodeId) => {
       .listen(socket)
       .on('connection', (sct) => {
         log('Client connected.');
-        // log('Sending boop.');
-        // sct.write('__boop');
-        // log(Object.keys(socket));
       });
 
     return server;
