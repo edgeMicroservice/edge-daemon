@@ -8,7 +8,7 @@ const getNodes = (mdeployStatuses, correlationId) => nodeModel.getAllNodes(corre
       return nodes;
     }
 
-    return nodes.map((node) => mdeployStatuses.includes(node.mdeployStatus));
+    return nodes.filter((node) => mdeployStatuses.includes(node.mdeployStatus));
   });
 
 const getDaemon = (nodeId, correlationId) => daemonModel.getDaemonById(nodeId, correlationId);
