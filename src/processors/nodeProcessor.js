@@ -3,6 +3,7 @@ const daemonModel = require('../models/daemonModel');
 
 const getNodes = (mdeployStatuses, correlationId) => nodeModel.getAllNodes(correlationId)
   .then((nodes) => {
+    console.log('===> mdeployStatuses', mdeployStatuses);
     if (!mdeployStatuses || mdeployStatuses.length < 1) {
       return nodes;
     }
