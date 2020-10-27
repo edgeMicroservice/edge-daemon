@@ -47,6 +47,7 @@ const makeHttpRequester = (nodeId) => {
             json: true,
           };
           log('===> sending mdeploy post request', options);
+          console.log('===> options', options);
           return rp(options)
             .then((data) => {
               log('===> success response from mdeploy', data.data);
