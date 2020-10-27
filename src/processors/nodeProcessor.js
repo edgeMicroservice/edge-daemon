@@ -4,11 +4,13 @@ const daemonModel = require('../models/daemonModel');
 const getNodes = (mdeployStatuses, correlationId) => nodeModel.getAllNodes(correlationId)
   .then((nodes) => {
     console.log('===> mdeployStatuses', mdeployStatuses);
-    if (!mdeployStatuses || mdeployStatuses.length < 1) {
-      return nodes;
-    }
+    if (!mdeployStatuses) return nodes;
 
-    return nodes.filter((node) => mdeployStatuses.includes(node.mdeployStatus));
+    let mdeployStatusArr;
+    if (!Array.isArray(mdeployStatuses)) mdeployStatusArr = [mdeployStatuses];
+    else mdeployStatusArr = mdeployStatuses;
+
+    return nodes.filter((node) => mdeployStatusArr.includes(node.mdeployStatus));
   });
 
 const getDaemon = (nodeId, correlationId) => daemonModel.getDaemonById(nodeId, correlationId);
