@@ -57,7 +57,7 @@ const initializeSocket = (nodeId) => {
               // plain/text
               log('Incoming in then, responses: ', responses);
 
-              socket.write(`${[
+              stream.write(`${[
                 'HTTP/1.1 200 OK',
                 'Content-Type: text/html; charset=UTF-8',
                 'Content-Encoding: UTF-8',
