@@ -28,13 +28,13 @@ const initializeSocket = (nodeId) => {
   function createServer(socket) {
     log('Creating server.');
     server = net.createServer((stream) => {
-      log('Connection acknowledged.');
+      log('Incoming connection acknowledged.');
 
       const self = Date.now();
       connections[self] = (stream);
 
       stream.on('end', () => {
-        log('Client disconnected.');
+        log('Incoming client disconnected.');
         delete connections[self];
       });
 
@@ -45,7 +45,7 @@ const initializeSocket = (nodeId) => {
       stream.on('data', (msg) => {
         const msgStr = msg.toString();
 
-        log('Request received on socket:', { msgStr });
+        log('Incoming request received on socket:', { msgStr });
 
         const formattedRequest = formatToJson(msgStr);
 
@@ -55,18 +55,22 @@ const initializeSocket = (nodeId) => {
           makeSockerRequester(nodeId).request(formattedRequest)
             .then((responses) => {
               try {
-                log('in then, responses: ', responses);
+                log('Incoming in then, responses: ', responses);
                 responses.forEach((response) => {
+                  console.log('===> writing response');
                   stream.write(response);
                 });
-                stream.emit('close');
+                setTimeout(() => {
+                  console.log('===> closing Incoming stream');
+                  stream.emit('close');
+                }, 2000);
               }
               catch (error) {
                 console.log('===> error occured while writing data to stream', error);
               }
             })
             .catch((data) => {
-              log('in catch');
+              log('Incoming in catch');
               stream.write(data);
               stream.emit('close');
             });
