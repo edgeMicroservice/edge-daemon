@@ -64,7 +64,7 @@ const initializeSocket = (nodeId) => {
                 }
                 else {
                   log('===> 2');
-                  // stream.emit('close')
+                  stream.emit('close');
                 }
               }
               catch (error) {
