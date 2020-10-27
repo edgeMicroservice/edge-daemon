@@ -54,7 +54,17 @@ const initializeSocket = (nodeId) => {
         makeSockerRequester(nodeId).request(formattedRequest)
           .then((responses) => {
             try {
+              // plain/text
               log('Incoming in then, responses: ', responses);
+
+              socket.write(`${[
+                'HTTP/1.1 200 OK',
+                'Content-Type: text/html; charset=UTF-8',
+                'Content-Encoding: UTF-8',
+                'Accept-Ranges: bytes',
+                'Connection: keep-alive',
+              ].join('\n')}\n\n`);
+
               stream.write(responses.join(''));
               // responses.forEach((response) => {
               //   console.log('===> writing response');
