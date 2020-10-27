@@ -55,10 +55,11 @@ const initializeSocket = (nodeId) => {
           .then((responses) => {
             try {
               log('Incoming in then, responses: ', responses);
-              responses.forEach((response) => {
-                console.log('===> writing response');
-                stream.write(response);
-              });
+              stream.write(responses.join(''));
+              // responses.forEach((response) => {
+              //   console.log('===> writing response');
+              //   stream.write(response);
+              // });
               setTimeout(() => {
                 console.log('===> closing Incoming stream');
                 stream.emit('close');
