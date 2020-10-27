@@ -42,7 +42,7 @@ const makeSockerRequester = (nodeId) => {
           if (!data) {
             log('nothing to see');
           }
-          log('===> ERROR docker response close: ', data);
+          log('===> docker response close');
           resolve();
         });
         // res.on('*', data => {

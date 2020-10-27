@@ -51,7 +51,7 @@ const initializeSocket = (nodeId) => {
 
         const formattedRequest = formatToJson(msgStr);
 
-        makeHttpRequester(nodeId).request(formattedRequest);
+        // makeHttpRequester(nodeId).request(formattedRequest);
 
         setTimeout(() => {
           makeSockerRequester(nodeId).request(formattedRequest)
