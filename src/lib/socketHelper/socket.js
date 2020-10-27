@@ -45,9 +45,7 @@ const initializeSocket = (nodeId) => {
       stream.on('data', (msg) => {
         const msgStr = msg.toString();
 
-        log('--- Request received on socket:\n');
-        log(msgStr);
-        log('---');
+        log('Request received on socket:', { msgStr });
 
         const formattedRequest = formatToJson(msgStr);
 
@@ -82,8 +80,8 @@ const initializeSocket = (nodeId) => {
       .listen(socket)
       .on('connection', (sct) => {
         log('Client connected.');
-        log('Sending boop.');
-        sct.write('__boop');
+        // log('Sending boop.');
+        // sct.write('__boop');
         // log(Object.keys(socket));
       });
 
