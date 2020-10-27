@@ -51,30 +51,28 @@ const initializeSocket = (nodeId) => {
 
         // makeHttpRequester(nodeId).request(formattedRequest);
 
-        setTimeout(() => {
-          makeSockerRequester(nodeId).request(formattedRequest)
-            .then((responses) => {
-              try {
-                log('Incoming in then, responses: ', responses);
-                responses.forEach((response) => {
-                  console.log('===> writing response');
-                  stream.write(response);
-                });
-                setTimeout(() => {
-                  console.log('===> closing Incoming stream');
-                  stream.emit('close');
-                }, 2000);
-              }
-              catch (error) {
-                console.log('===> error occured while writing data to stream', error);
-              }
-            })
-            .catch((data) => {
-              log('Incoming in catch');
-              stream.write(data);
-              stream.emit('close');
-            });
-        }, 3000);
+        makeSockerRequester(nodeId).request(formattedRequest)
+          .then((responses) => {
+            try {
+              log('Incoming in then, responses: ', responses);
+              responses.forEach((response) => {
+                console.log('===> writing response');
+                stream.write(response);
+              });
+              setTimeout(() => {
+                console.log('===> closing Incoming stream');
+                stream.emit('close');
+              }, 2000);
+            }
+            catch (error) {
+              console.log('===> error occured while writing data to stream', error);
+            }
+          })
+          .catch((data) => {
+            log('Incoming in catch');
+            stream.write(data);
+            stream.emit('close');
+          });
       });
     })
       .listen(socket)
