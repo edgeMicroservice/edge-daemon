@@ -25,6 +25,13 @@ const makeHttpRequester = (nodeId) => {
       headers,
       body,
     });
+    console.log('===> request received on httpRequester', util.inspect({
+      method,
+      host,
+      endpoint,
+      headers,
+      body,
+    }, false, null, true /* enable colors */));
     // return;
     if (method === 'POST') {
       getCurrentNode()
@@ -48,7 +55,7 @@ const makeHttpRequester = (nodeId) => {
             json: true,
           };
           log('===> sending mdeploy post request', options);
-          console.log('===> options', util.inspect(options, false, null, true /* enable colors */))
+          console.log('===> options', util.inspect(options, false, null, true /* enable colors */));
           return rp(options)
             .then((data) => {
               log('===> success response from mdeploy', data.data);
