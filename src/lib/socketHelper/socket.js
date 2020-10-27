@@ -53,17 +53,13 @@ const initializeSocket = (nodeId) => {
 
         setTimeout(() => {
           makeSockerRequester(nodeId).request(formattedRequest)
-            .then((data) => {
+            .then((responses) => {
               try {
-                log('in then: ', data);
-                if (data) {
-                  log('===> 1');
-                  stream.write(data);
-                }
-                else {
-                  log('===> 2');
-                  stream.emit('close');
-                }
+                log('in then, responses: ', responses);
+                responses.forEach((response) => {
+                  stream.write(response);
+                });
+                stream.emit('close');
               }
               catch (error) {
                 console.log('===> error occured while writing data to stream', error);

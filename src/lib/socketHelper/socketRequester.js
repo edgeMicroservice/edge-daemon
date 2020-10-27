@@ -29,10 +29,14 @@ const makeSockerRequester = (nodeId) => {
       const callback = (res) => {
         log(`STATUS: ${res.statusCode}`);
         // log('===> res', res)
+
+        const responses = [];
+
         res.setEncoding('utf8');
         res.on('data', (data) => {
           log('===> docker response data: ', data);
-          if (data) resolve(data);
+          responses.push(data);
+          // if (data) resolve(data);
         });
         res.on('error', (data) => {
           log('===> ERROR docker response error: ', data);
@@ -43,7 +47,7 @@ const makeSockerRequester = (nodeId) => {
             log('nothing to see');
           }
           log('===> docker response close');
-          resolve();
+          resolve(responses);
         });
         // res.on('*', data => {
         //   log('===> dekho', data);
