@@ -6,7 +6,7 @@ const nodeProcessor = require('../processors/nodeProcessor');
 const getNodes = (req, res) => {
   const options = convertParams(req);
 
-  nodeProcessor.getNodes(options.correlationId)
+  nodeProcessor.getNodes(options.mdeployStatus, options.correlationId)
     .then((results) => sendResult(results, 201, res, options))
     .catch((err) => sendError(err, res, null, options));
 };
