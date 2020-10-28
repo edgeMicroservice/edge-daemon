@@ -49,11 +49,15 @@ module.exports = (() => {
         cliConfigFile: process.env.HZN_CLI_CONFIG_FILE || '/etc/default/horizon',
         anaxContainersPortNumStart: parseInt(process.env.HZN_ANAX_CONTAINERS_PORT_NUM_START, 10) || 8200,
         anaxContainersPortNumEnd: parseInt(process.env.HZN_ANAX_CONTAINERS_PORT_NUM_END, 10) || 8299,
+        essObjectTypes: process.env.HZN_ESS_OBJECT_TYPES,
       },
       edgeEngine: {
         url: edgeEngineUrl,
         projectId: edgeEngineProjectId,
         mdeployEndpoint: edgeEngineMdeployEndpoint,
+      },
+      development: {
+        deployServicesOnDocker: process.env.DEVELOPMENT_DEPLOY_SERVICES_ON_DOCKER === 'yes',
       },
     },
   });
