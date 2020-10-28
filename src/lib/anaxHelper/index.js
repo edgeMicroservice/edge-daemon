@@ -53,6 +53,7 @@ const initializeAnaxNodesForEdgeNodes = (correlationId) => getAllNodes()
     const shortenedNodeId = node.id.substr(0, 16);
     return createPolicyFile(node.id, properties).then((policyFilePath) => getPort({ port: getPort.makeRange(anaxContainersPortNumStart, anaxContainersPortNumEnd) })
       .then((availableNodePort) => (() => {
+        console.log('===> deployServicesOnDocker', deployServicesOnDocker);
         if (deployServicesOnDocker) return Promise.resolve();
         return initializeSocket(node.id);
       })()
