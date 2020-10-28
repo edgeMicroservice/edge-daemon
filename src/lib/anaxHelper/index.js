@@ -50,13 +50,13 @@ const initializeAnaxNodesForEdgeNodes = (correlationId) => getAllNodes()
     });
 
     // Anax does not support large nodeIds, left some space for flags
-    // const shortenedNodeId = node.id.substr(0, 16);
+    const shortenedNodeId = node.id.substr(0, 16);
     return createPolicyFile(node.id, properties).then((policyFilePath) => getPort({ port: getPort.makeRange(anaxContainersPortNumStart, anaxContainersPortNumEnd) })
       .then((availableNodePort) => (() => {
         if (deployServicesOnDocker) return Promise.resolve();
         return initializeSocket(node.id);
       })()
-        .then((dockerSocketFilePath) => deployAndRegisterAnaxNode(node.id, availableNodePort, policyFilePath, dockerSocketFilePath, correlationId)
+        .then((dockerSocketFilePath) => deployAndRegisterAnaxNode(shortenedNodeId, availableNodePort, policyFilePath, dockerSocketFilePath, correlationId)
           .then(() => updateAnaxState(node.id, { status: anaxStatusValues.CONFIGURED, availableNodePort })))));
   }));
 
