@@ -15,6 +15,7 @@ const {
     exchangeUserAuth,
     orgId,
     defaultNodeToken,
+    anaxStorageBasePath,
   },
 } = require('../../configuration/config');
 const {
@@ -141,6 +142,7 @@ const deployAndRegisterAnaxNode = (nodeId, nodePort, policyFilePath, dockerSocke
       HZN_FSS_CSSURL: cssUrl,
       ANAX_NODE_ID: nodeId,
       ANAX_NODE_PORT: nodePort,
+      ANAX_STORAGE_BASE_PATH: anaxStorageBasePath,
       HORIZON_URL: `http://localhost:${nodePort}`, // test only
     },
     correlationId,

@@ -46,6 +46,7 @@ module.exports = (() => {
         defaultNodeToken: process.env.HZN_DEFAULT_NODE_TOKEN || 'nodeToken',
         nodePoliciesDir: process.env.HZN_POLICIES_DIR || '/var/tmp/oh/policies',
         nodeSocketsDir: process.env.HZN_SOCKETS_DIR || '/var/tmp/oh/sockets',
+        anaxStorageBasePath: process.env.HZN_ANAX_STORAGE_BASE_PATH || '/var/tmp/oh/storage',
         cliConfigFile: process.env.HZN_CLI_CONFIG_FILE || '/etc/default/horizon',
         anaxContainersPortNumStart: parseInt(process.env.HZN_ANAX_CONTAINERS_PORT_NUM_START, 10) || 8200,
         anaxContainersPortNumEnd: parseInt(process.env.HZN_ANAX_CONTAINERS_PORT_NUM_END, 10) || 8299,

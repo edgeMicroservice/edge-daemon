@@ -165,9 +165,9 @@ start() {
 
 	# setup directories for file sync service
 	if isMacos; then
-		fssBasePath=/private/var/tmp/horizon
+		fssBasePath=${ANAX_STORAGE_BASE_PATH:-'/private/var/tmp/oh/storage'}
 	else
-		fssBasePath=/var/tmp/horizon
+		fssBasePath=${ANAX_STORAGE_BASE_PATH:-'/var/tmp/oh/storage'}
 	fi
 
 	# set this base path to 777 to allow other users create directories under it
@@ -182,7 +182,7 @@ start() {
 	fi
 
 	# this is container name specific, like "horizon1" for example. 
-	fssHostSharePath=${fssBasePath}/${DOCKER_NAME}
+	fssHostSharePath=${fssBasePath}/${INDEX_NUM}
 
     # clean up everything under the container name directory
 	# just incase there are left over files by other user
