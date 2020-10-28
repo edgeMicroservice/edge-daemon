@@ -56,8 +56,11 @@ const initializeAnaxNodesForEdgeNodes = (correlationId) => getAllNodes()
         if (deployServicesOnDocker) return Promise.resolve();
         return initializeSocket(node.id);
       })()
-        .then((dockerSocketFilePath) => deployAndRegisterAnaxNode(shortenedNodeId, availableNodePort, policyFilePath, dockerSocketFilePath, correlationId)
-          .then(() => updateAnaxState(node.id, { status: anaxStatusValues.CONFIGURED, availableNodePort })))));
+        .then((dockerSocketFilePath) => {
+          console.log('===> dockerSocketFilePath', dockerSocketFilePath);
+          return deployAndRegisterAnaxNode(shortenedNodeId, availableNodePort, policyFilePath, dockerSocketFilePath, correlationId)
+            .then(() => updateAnaxState(node.id, { status: anaxStatusValues.CONFIGURED, availableNodePort }));
+        })));
   }));
 
 const removeAllAnaxNodes = () => purgeDocker();
