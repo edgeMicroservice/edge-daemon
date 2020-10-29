@@ -62,7 +62,7 @@ const initializeSocket = (nodeId) => {
                 'Content-Type: text/html; charset=UTF-8',
                 'Content-Encoding: UTF-8',
                 'Accept-Ranges: bytes',
-                'Connection: keep-alive',
+                'Connection: close',
               ].join('\r\n')}\r\n\r\n`);
 
               stream.write(responses.join(''));
