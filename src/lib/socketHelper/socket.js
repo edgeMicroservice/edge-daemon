@@ -72,6 +72,7 @@ const initializeSocket = (nodeId) => {
               // });
               setTimeout(() => {
                 console.log('===> closing Incoming stream');
+                stream.end();
                 stream.emit('close');
               }, 2000);
             }
