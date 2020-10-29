@@ -49,7 +49,7 @@ const start = () => getClient()
     throw getRichError('System', 'Cannot start service initializing gateway failed', error, null, 'error');
   })
   .then(() => {
-    setInterval(syncNodes, gatewaySync.jobInterval * 1000);
+    // setInterval(syncNodes, gatewaySync.jobInterval * 1000);
   });
 
 module.exports = {
