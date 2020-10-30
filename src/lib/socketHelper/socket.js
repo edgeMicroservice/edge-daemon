@@ -17,7 +17,6 @@ const {
 } = require('./httpJson');
 
 const makeLogger = require('./logger');
-// const { forEach } = require('lodash');
 
 const initializeSocket = (nodeId) => {
   const { log } = makeLogger(nodeId);
@@ -52,6 +51,7 @@ const initializeSocket = (nodeId) => {
         log('Incoming request received on socket:', { msgStr });
 
         const formattedRequest = formatToJson(msgStr);
+        console.log('===> formattedRequest', formattedRequest);
 
         // makeHttpRequester(nodeId).request(formattedRequest);
 
