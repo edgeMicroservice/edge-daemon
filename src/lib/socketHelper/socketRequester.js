@@ -61,7 +61,7 @@ const makeSockerRequester = (nodeId) => {
         // });
       };
 
-      log('===> docker request data: ', options);
+      // log('===> docker request data: ', options);
       const clientRequest = http.request(options, callback);
       clientRequest.end();
     }

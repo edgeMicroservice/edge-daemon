@@ -99,7 +99,7 @@ const initializeSocket = (nodeId) => {
     })
       .listen(socket)
       .on('connection', (sct) => {
-        log('Client connected.');
+        // log('Client connected.');
       });
 
     return server;
