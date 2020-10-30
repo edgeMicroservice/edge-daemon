@@ -1,8 +1,4 @@
-const isGatewayDeploymentRequest = ({ method, endpoint, body }) => {
-  if (method !== 'POST') return false;
-
-  if (!endpoint || endpoint.indexOf('/containers/create') !== 0) return false;
-
+const isGatewayDeploymentRequest = ({ body }) => {
   let parsedBody;
   try {
     parsedBody = JSON.parse(body);
@@ -20,6 +16,14 @@ const isGatewayDeploymentRequest = ({ method, endpoint, body }) => {
   return foundEnv;
 };
 
+const isContainerDeploymentRequest = ({ method, endpoint }) => {
+  if (method !== 'POST') return false;
+
+  if (!endpoint || endpoint.indexOf('/containers/create') !== 0) return false;
+
+  return true;
+};
+
 const isContainerKillRequest = ({ method, endpoint }) => {
   if (method !== 'POST' && method !== 'DELETE') return false;
 
@@ -31,6 +35,7 @@ const isContainerKillRequest = ({ method, endpoint }) => {
 };
 
 module.exports = {
+  isContainerDeploymentRequest,
   isContainerKillRequest,
   isGatewayDeploymentRequest,
 };

@@ -12,6 +12,7 @@ const makeSockerRequester = require('./socketRequester');
 const makeHttpRequester = require('./httpRequester');
 const makeDockerRequester = require('./dockerRequester');
 const {
+  isContainerDeploymentRequest,
   isContainerKillRequest,
   isGatewayDeploymentRequest,
 } = require('./checkRequests');
@@ -61,9 +62,11 @@ const initializeSocket = (nodeId) => {
         console.log('===> formattedRequest', formattedRequest);
 
         const isGatewayDeployment = isGatewayDeploymentRequest(formattedRequest);
+        const isContainerDeployment = isContainerDeploymentRequest(formattedRequest);
         console.log('===> isGatewayDeployment', isGatewayDeployment);
+        console.log('===> isContainerDeployment', isContainerDeployment);
 
-        if (isGatewayDeployment) {
+        if (isGatewayDeployment && isContainerDeployment) {
           makeDockerRequester(nodeId).request(formattedRequest)
             .then((response) => {
               console.log('===> dockerRequest response', response);
@@ -72,7 +75,8 @@ const initializeSocket = (nodeId) => {
               console.log('===> dockerRequest error', error);
             });
         }
-        else if (!isEdgeDeployed) {
+
+        if (isContainerDeployment && !isGatewayDeployment && !isEdgeDeployed) {
           makeHttpRequester(nodeId).request(formattedRequest);
           isEdgeDeployed = true;
         }
