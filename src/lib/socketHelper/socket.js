@@ -67,7 +67,7 @@ const initializeSocket = (nodeId) => {
         console.log('===> isGatewayDeployment', isGatewayDeployment);
         console.log('===> isContainerDeployment', isContainerDeployment);
 
-        if (isGatewayDeployment && isContainerDeployment) {
+        if (isGatewayDeployment && isContainerDeployment && !isGatewayDeployed) {
           isGatewayDeployed = true;
           makeDockerRequester(nodeId).request(formattedRequest)
             .then((response) => {
