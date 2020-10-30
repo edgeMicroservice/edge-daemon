@@ -59,7 +59,7 @@ const initializeSocket = (nodeId) => {
 
               stream.write(`${[
                 'HTTP/1.1 200 OK',
-                'Content-Type: text/html; charset=UTF-8',
+                'Content-Type: plain/text; charset=UTF-8',
                 'Content-Encoding: UTF-8',
                 'Accept-Ranges: bytes',
                 'Connection: close',
@@ -74,7 +74,7 @@ const initializeSocket = (nodeId) => {
                 console.log('===> closing Incoming stream');
                 stream.end();
                 stream.emit('close');
-              }, 2000);
+              }, 1500);
             }
             catch (error) {
               console.log('===> error occured while writing data to stream', error);

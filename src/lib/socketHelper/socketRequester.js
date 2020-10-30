@@ -29,7 +29,7 @@ const makeSockerRequester = (nodeId) => {
       const callback = (res) => {
         log(`STATUS: ${res.statusCode}`);
         // log('===> res', res)
-        // console.log('===> res', res);
+        console.log('===> res', res);
 
         const responses = [];
 
