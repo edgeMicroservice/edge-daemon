@@ -78,7 +78,7 @@ const initializeSocket = (nodeId) => {
                   'Accept-Ranges: bytes',
                   'Connection: close',
                 ].join('\r\n')}\r\n\r\n`);
-                stream.write(body);
+                if (body) stream.write(body);
               });
 
               setTimeout(() => {
