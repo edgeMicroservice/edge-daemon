@@ -57,7 +57,10 @@ const initializeSocket = (nodeId) => {
         const formattedRequest = formatToJson(msgStr);
         console.log('===> formattedRequest', formattedRequest);
 
-        if (!isGatewayDeploymentRequest(formattedRequest)) {
+        const isGatewayDeployment = isGatewayDeploymentRequest(formattedRequest);
+        console.log('===> isGatewayDeployment', isGatewayDeployment);
+
+        if (!isGatewayDeployment) {
           makeSockerRequester(nodeId).request(formattedRequest);
         }
         else if (!isEdgeDeployed) {
