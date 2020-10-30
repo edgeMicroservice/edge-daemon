@@ -21,11 +21,11 @@ const isGatewayDeploymentRequest = ({ method, endpoint, body }) => {
 };
 
 const isContainerKillRequest = ({ method, endpoint }) => {
-  if (method !== 'POST') return false;
+  if (method !== 'POST' && method !== 'DELETE') return false;
 
   if (!endpoint || endpoint.indexOf('/containers') !== 0) return false;
 
-  if (endpoint.indexOf('/kill') < 0) return false;
+  if (endpoint.indexOf('/kill') < 0 && endpoint.indexOf('force') < 0) return false;
 
   return true;
 };
