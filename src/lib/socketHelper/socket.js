@@ -65,16 +65,16 @@ const initializeSocket = (nodeId) => {
                 stream.write(formatToHttp(status, headers, body));
               });
 
-              stream.end();
+              // stream.end();
               // stream.write(responses.join(''));
               // responses.forEach((response) => {
               //   console.log('===> writing response');
               //   stream.write(response);
               // });
-              // setTimeout(() => {
-              //   console.log('===> closing Incoming stream');
-              //   stream.end();
-              // }, 1500);
+              setTimeout(() => {
+                console.log('===> closing Incoming stream');
+                stream.end();
+              }, 1500);
             }
             catch (error) {
               console.log('===> error occured while writing data to stream', error);
