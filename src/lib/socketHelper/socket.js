@@ -11,9 +11,13 @@ const {
 const makeSockerRequester = require('./socketRequester');
 const makeHttpRequester = require('./httpRequester');
 
-const { formatToJson } = require('./httpJson');
+const {
+  formatToJson,
+  formatToHttp,
+} = require('./httpJson');
 
 const makeLogger = require('./logger');
+// const { forEach } = require('lodash');
 
 const initializeSocket = (nodeId) => {
   const { log } = makeLogger(nodeId);
@@ -57,24 +61,20 @@ const initializeSocket = (nodeId) => {
               // plain/text
               log('Incoming in then, responses: ', responses);
 
-              stream.write(`${[
-                'HTTP/1.1 200 OK',
-                'Content-Type: plain/text; charset=UTF-8',
-                'Content-Encoding: UTF-8',
-                'Accept-Ranges: bytes',
-                'Connection: close',
-              ].join('\r\n')}\r\n\r\n`);
+              responses.forEach(({ status, headers, body }) => {
+                stream.write(formatToHttp(status, headers, body));
+              });
 
-              stream.write(responses.join(''));
+              stream.end();
+              // stream.write(responses.join(''));
               // responses.forEach((response) => {
               //   console.log('===> writing response');
               //   stream.write(response);
               // });
-              setTimeout(() => {
-                console.log('===> closing Incoming stream');
-                stream.end();
-                stream.emit('close');
-              }, 1500);
+              // setTimeout(() => {
+              //   console.log('===> closing Incoming stream');
+              //   stream.end();
+              // }, 1500);
             }
             catch (error) {
               console.log('===> error occured while writing data to stream', error);
@@ -83,7 +83,7 @@ const initializeSocket = (nodeId) => {
           .catch((data) => {
             log('Incoming in catch');
             stream.write(data);
-            stream.emit('close');
+            stream.end();
           });
       });
     })

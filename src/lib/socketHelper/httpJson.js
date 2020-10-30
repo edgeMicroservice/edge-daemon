@@ -28,6 +28,21 @@ const formatToJson = (http) => {
   return formattedRequest;
 };
 
+const formatToHttp = (status, headers = {}, body) => {
+  const httpObj = [`HTTP/1.1 ${status.code} ${status.message}`];
+
+  Object.entries(headers).forEach(([key, value]) => {
+    httpObj.push(`${key}: ${value}`);
+  });
+
+  const httpResponse = `${httpObj.join('\r\n')}\r\n\r\n`;
+
+  if (!body) return httpResponse;
+
+  return `${httpResponse}${body}`;
+};
+
 module.exports = {
   formatToJson,
+  formatToHttp,
 };

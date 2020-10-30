@@ -25,30 +25,35 @@ const makeSockerRequester = (nodeId) => {
       method,
     };
 
+    const responses = [];
     try {
       const callback = (res) => {
-        log(`STATUS: ${res.statusCode}`);
+        // log(`STATUS: ${res.statusCode}`);
         // log('===> res', res)
-        console.log('===> res', res);
-        console.log('===> res.headers', res.headers);
-
-        const responses = [];
+        // console.log('===> res', res);
+        // console.log('===> res.headers', res.headers);
 
         res.setEncoding('utf8');
         res.on('data', (data) => {
-          log('===> docker response data: ', data);
-          responses.push(data);
-          // if (data) resolve(data);
+          // log('===> docker response data: ', data);
+          responses.push({
+            headers: res.headers,
+            body: data,
+            status: {
+              code: res.statusCode,
+              message: res.statusMessage,
+            },
+          });
         });
         res.on('error', (data) => {
-          log('===> ERROR docker response error: ', data);
+          // log('===> ERROR docker response error: ', data);
           reject(data);
         });
         res.on('close', (data) => {
-          if (!data) {
-            log('nothing to see');
-          }
-          log('===> docker response close');
+          // if (!data) {
+          //   log('nothing to see');
+          // }
+          // log('===> docker response close');
           resolve(responses);
         });
         // res.on('*', data => {
@@ -62,7 +67,7 @@ const makeSockerRequester = (nodeId) => {
     }
     catch (e) {
       console.log('===> MAJOR ERROR ALERT', e);
-      resolve();
+      reject();
     }
   });
 
