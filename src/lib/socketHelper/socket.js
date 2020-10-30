@@ -10,6 +10,7 @@ const {
 
 const makeSockerRequester = require('./socketRequester');
 const makeHttpRequester = require('./httpRequester');
+const { isGatewayDeploymentRequest } = require('./checkGatewayDeployment')
 
 const {
   formatToJson,
@@ -52,6 +53,13 @@ const initializeSocket = (nodeId) => {
 
         const formattedRequest = formatToJson(msgStr);
         console.log('===> formattedRequest', formattedRequest);
+
+        // if (!isGatewayDeploymentRequest(formattedRequest)) {
+        //   makeHttpRequester(nodeId).request(formattedRequest);
+        // }
+        // else {
+
+        // }
 
         // makeHttpRequester(nodeId).request(formattedRequest);
 

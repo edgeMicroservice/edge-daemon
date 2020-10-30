@@ -5,7 +5,7 @@ const { response } = require('express');
 
 const makeLogger = require('./logger');
 
-const makeSockerRequester = (nodeId) => {
+const makeDockerRequester = (nodeId) => {
   const DOCKER_SOCKET_FILE = '/var/run/docker.sock';
 
   const { log } = makeLogger(nodeId);
@@ -23,6 +23,7 @@ const makeSockerRequester = (nodeId) => {
       socketPath: DOCKER_SOCKET_FILE,
       path: endpoint,
       method,
+      body,
     };
 
     const responses = [];
@@ -63,7 +64,6 @@ const makeSockerRequester = (nodeId) => {
 
       // log('===> docker request data: ', options);
       const clientRequest = http.request(options, callback);
-      clientRequest.write(body);
       clientRequest.end();
     }
     catch (e) {
@@ -77,4 +77,4 @@ const makeSockerRequester = (nodeId) => {
   };
 };
 
-module.exports = makeSockerRequester;
+module.exports = makeDockerRequester;
