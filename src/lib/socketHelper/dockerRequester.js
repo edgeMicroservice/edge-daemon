@@ -24,6 +24,8 @@ const makeDockerRequester = (nodeId) => {
       path: endpoint,
       method,
       body,
+      host,
+      headers,
     };
 
     const responses = [];

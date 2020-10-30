@@ -10,7 +10,8 @@ const {
 
 const makeSockerRequester = require('./socketRequester');
 const makeHttpRequester = require('./httpRequester');
-const { isGatewayDeploymentRequest } = require('./checkGatewayDeployment')
+const makeDockerRequester = require('./dockerRequester');
+const { isGatewayDeploymentRequest } = require('./checkGatewayDeployment');
 
 const {
   formatToJson,
@@ -18,6 +19,8 @@ const {
 } = require('./httpJson');
 
 const makeLogger = require('./logger');
+
+let isEdgeDeployed = false;
 
 const initializeSocket = (nodeId) => {
   const { log } = makeLogger(nodeId);
@@ -54,12 +57,13 @@ const initializeSocket = (nodeId) => {
         const formattedRequest = formatToJson(msgStr);
         console.log('===> formattedRequest', formattedRequest);
 
-        // if (!isGatewayDeploymentRequest(formattedRequest)) {
-        //   makeHttpRequester(nodeId).request(formattedRequest);
-        // }
-        // else {
-
-        // }
+        if (!isGatewayDeploymentRequest(formattedRequest)) {
+          makeSockerRequester(nodeId).request(formattedRequest);
+        }
+        else if (!isEdgeDeployed) {
+          makeHttpRequester(nodeId).request(formattedRequest);
+          isEdgeDeployed = true;
+        }
 
         // makeHttpRequester(nodeId).request(formattedRequest);
 
