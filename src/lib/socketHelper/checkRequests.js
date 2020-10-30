@@ -8,6 +8,9 @@ const isGatewayDeploymentRequest = ({ body }) => {
   }
 
   let foundEnv = false;
+
+  if (!parsedBody.Env || !Array.isArray(parsedBody.Env) || parsedBody.Env.length < 0) return foundEnv;
+
   parsedBody.Env.forEach((env) => {
     if (env.indexOf('HZN_DEPLOYMENT_LOCATION=gatewayNode') === 0) {
       foundEnv = true;
