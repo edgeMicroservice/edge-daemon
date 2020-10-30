@@ -21,7 +21,7 @@ const makeDockerRequester = (nodeId) => {
     // return;
     const options = {
       socketPath: DOCKER_SOCKET_FILE,
-      path: endpoint,
+      path: '/containers/create?name=9972b90575d30a16d2cc20cc1d1a5f9c95e3ce65b0cb16e6475c2d24b12eee51-mreport',
       method,
       body,
       host,

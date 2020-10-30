@@ -80,7 +80,7 @@ const initializeSocket = (nodeId) => {
         const isContainerKillReq = isContainerKillRequest(formattedRequest);
         console.log('===> isContainerKillReq', isContainerKillReq);
 
-        if (isContainerKillReq) {
+        if (false) {
           stream.end();
         }
         else {
