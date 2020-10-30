@@ -11,7 +11,10 @@ const {
 const makeSockerRequester = require('./socketRequester');
 const makeHttpRequester = require('./httpRequester');
 const makeDockerRequester = require('./dockerRequester');
-const { isGatewayDeploymentRequest } = require('./checkGatewayDeployment');
+const {
+  isContainerKillRequest,
+  isGatewayDeploymentRequest,
+} = require('./checkRequests');
 
 const {
   formatToJson,
@@ -68,48 +71,50 @@ const initializeSocket = (nodeId) => {
           isEdgeDeployed = true;
         }
 
-        // makeHttpRequester(nodeId).request(formattedRequest);
+        if (isContainerKillRequest) {
+          stream.end();
+        } else {
+          makeSockerRequester(nodeId).request(formattedRequest)
+            .then((responses) => {
+              try {
+                // plain/text
+                log('Incoming in then, responses: ', responses);
 
-        makeSockerRequester(nodeId).request(formattedRequest)
-          .then((responses) => {
-            try {
-              // plain/text
-              log('Incoming in then, responses: ', responses);
+                // responses.forEach(({ status, headers, body }) => {
+                //   const output = formatToHttp(status, headers);
+                //   console.log('===> response', { status, headers, body });
+                //   console.log('===> output', output);
+                //   stream.write(output);
+                //   console.log('===> body', body);
+                //   stream.write(body);
+                // });
 
-              // responses.forEach(({ status, headers, body }) => {
-              //   const output = formatToHttp(status, headers);
-              //   console.log('===> response', { status, headers, body });
-              //   console.log('===> output', output);
-              //   stream.write(output);
-              //   console.log('===> body', body);
-              //   stream.write(body);
-              // });
+                responses.forEach(({ status, headers, body }) => {
+                  stream.write(`${[
+                    'HTTP/1.1 200 OK',
+                    'Content-Type: plain/text; charset=UTF-8',
+                    'Content-Encoding: UTF-8',
+                    'Accept-Ranges: bytes',
+                    'Connection: close',
+                  ].join('\r\n')}\r\n\r\n`);
+                  if (body) stream.write(body);
+                });
 
-              responses.forEach(({ status, headers, body }) => {
-                stream.write(`${[
-                  'HTTP/1.1 200 OK',
-                  'Content-Type: plain/text; charset=UTF-8',
-                  'Content-Encoding: UTF-8',
-                  'Accept-Ranges: bytes',
-                  'Connection: close',
-                ].join('\r\n')}\r\n\r\n`);
-                if (body) stream.write(body);
-              });
-
-              setTimeout(() => {
-                console.log('===> closing Incoming stream');
-                stream.end();
-              }, 1000);
-            }
-            catch (error) {
-              console.log('===> error occured while writing data to stream', error);
-            }
-          })
-          .catch((data) => {
-            log('Incoming in catch');
-            stream.write(data);
-            stream.end();
-          });
+                setTimeout(() => {
+                  console.log('===> closing Incoming stream');
+                  stream.end();
+                }, 1000);
+              }
+              catch (error) {
+                console.log('===> error occured while writing data to stream', error);
+              }
+            })
+            .catch((data) => {
+              log('Incoming in catch');
+              stream.write(data);
+              stream.end();
+            });
+        }
       });
     })
       .listen(socket)

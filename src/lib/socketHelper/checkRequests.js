@@ -20,6 +20,17 @@ const isGatewayDeploymentRequest = ({ method, endpoint, body }) => {
   return foundEnv;
 };
 
+const isContainerKillRequest = ({ method, endpoint }) => {
+  if (method !== 'POST') return false;
+
+  if (!endpoint || endpoint.indexOf('/containers') !== 0) return false;
+
+  if (endpoint.indexOf('/kill') < 0) return false;
+
+  return true;
+};
+
 module.exports = {
+  isContainerKillRequest,
   isGatewayDeploymentRequest,
 };
