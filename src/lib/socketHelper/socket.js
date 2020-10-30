@@ -62,7 +62,10 @@ const initializeSocket = (nodeId) => {
               log('Incoming in then, responses: ', responses);
 
               responses.forEach(({ status, headers, body }) => {
-                stream.write(formatToHttp(status, headers, body));
+                const output = formatToHttp(status, headers, body);
+                console.log('===> response', { status, headers, body });
+                console.log('===> output', output);
+                stream.write(output);
               });
 
               // stream.end();
