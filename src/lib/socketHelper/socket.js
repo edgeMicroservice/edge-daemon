@@ -77,7 +77,7 @@ const initializeSocket = (nodeId) => {
               setTimeout(() => {
                 console.log('===> closing Incoming stream');
                 stream.end();
-              }, 1500);
+              }, 4000);
             }
             catch (error) {
               console.log('===> error occured while writing data to stream', error);
