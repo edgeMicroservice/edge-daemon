@@ -31,7 +31,8 @@ const formatToJson = (http) => {
 const formatToHttp = (status, headers = {}, body) => {
   // eslint-disable-next-line no-param-reassign
   delete headers.connection;
-
+  // eslint-disable-next-line no-param-reassign
+  headers['Content-Encoding'] = 'UTF-8';
   const httpObj = [`HTTP/1.1 ${status.code} ${status.message}`];
 
   Object.entries(headers).forEach(([key, value]) => {

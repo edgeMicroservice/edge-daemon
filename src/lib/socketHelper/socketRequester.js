@@ -33,7 +33,7 @@ const makeSockerRequester = (nodeId) => {
         // console.log('===> res', res);
         // console.log('===> res.headers', res.headers);
 
-        // res.setEncoding('utf8');
+        res.setEncoding('utf8');
         res.on('data', (data) => {
           // log('===> docker response data: ', data);
           responses.push({
