@@ -71,9 +71,13 @@ const initializeSocket = (nodeId) => {
           isEdgeDeployed = true;
         }
 
-        if (isContainerKillRequest) {
+        const isContainerKillReq = isContainerKillRequest(formattedRequest);
+        console.log('===> isContainerKillReq', isContainerKillReq);
+
+        if (isContainerKillReq) {
           stream.end();
-        } else {
+        }
+        else {
           makeSockerRequester(nodeId).request(formattedRequest)
             .then((responses) => {
               try {
