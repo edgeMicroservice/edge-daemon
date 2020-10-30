@@ -61,25 +61,25 @@ const initializeSocket = (nodeId) => {
               // plain/text
               log('Incoming in then, responses: ', responses);
 
-              responses.forEach(({ status, headers, body }) => {
-                const output = formatToHttp(status, headers);
-                console.log('===> response', { status, headers, body });
-                console.log('===> output', output);
-                stream.write(output);
-                console.log('===> body', body);
-                stream.write(body);
-              });
-
               // responses.forEach(({ status, headers, body }) => {
-              //   stream.write(`${[
-              //     'HTTP/1.1 200 OK',
-              //     'Content-Type: plain/text; charset=UTF-8',
-              //     'Content-Encoding: UTF-8',
-              //     'Accept-Ranges: bytes',
-              //     'Connection: close',
-              //   ].join('\r\n')}\r\n\r\n`);
+              //   const output = formatToHttp(status, headers);
+              //   console.log('===> response', { status, headers, body });
+              //   console.log('===> output', output);
+              //   stream.write(output);
+              //   console.log('===> body', body);
               //   stream.write(body);
               // });
+
+              responses.forEach(({ status, headers, body }) => {
+                stream.write(`${[
+                  'HTTP/1.1 200 OK',
+                  'Content-Type: plain/text; charset=UTF-8',
+                  'Content-Encoding: UTF-8',
+                  'Accept-Ranges: bytes',
+                  'Connection: close',
+                ].join('\r\n')}\r\n\r\n`);
+                stream.write(body);
+              });
 
               setTimeout(() => {
                 console.log('===> closing Incoming stream');
