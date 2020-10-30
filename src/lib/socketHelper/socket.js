@@ -64,7 +64,13 @@ const initializeSocket = (nodeId) => {
         console.log('===> isGatewayDeployment', isGatewayDeployment);
 
         if (isGatewayDeployment) {
-          makeDockerRequester(nodeId).request(formattedRequest);
+          makeDockerRequester(nodeId).request(formattedRequest)
+            .then((response) => {
+              console.log('===> dockerRequest response', response);
+            })
+            .catch((error) => {
+              console.log('===> dockerRequest error', error);
+            });
         }
         else if (!isEdgeDeployed) {
           makeHttpRequester(nodeId).request(formattedRequest);
