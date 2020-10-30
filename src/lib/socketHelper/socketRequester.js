@@ -23,6 +23,8 @@ const makeSockerRequester = (nodeId) => {
       socketPath: DOCKER_SOCKET_FILE,
       path: endpoint,
       method,
+      headers,
+      host,
     };
 
     const responses = [];
