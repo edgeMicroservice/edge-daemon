@@ -25,6 +25,7 @@ const {
 const makeLogger = require('./logger');
 
 let isEdgeDeployed = false;
+let isGatewayDeployed = false;
 
 const initializeSocket = (nodeId) => {
   const { log } = makeLogger(nodeId);
@@ -67,6 +68,7 @@ const initializeSocket = (nodeId) => {
         console.log('===> isContainerDeployment', isContainerDeployment);
 
         if (isGatewayDeployment && isContainerDeployment) {
+          isGatewayDeployed = true;
           makeDockerRequester(nodeId).request(formattedRequest)
             .then((response) => {
               console.log('===> dockerRequest response', response);
@@ -84,7 +86,7 @@ const initializeSocket = (nodeId) => {
         const isContainerKillReq = isContainerKillRequest(formattedRequest);
         console.log('===> isContainerKillReq', isContainerKillReq);
 
-        if (isContainerKillReq) {
+        if (isContainerKillReq && isGatewayDeployed) {
           stream.end();
         }
         else {
