@@ -28,12 +28,10 @@ const makeSockerRequester = (nodeId) => {
     };
 
     const responses = [];
+
     try {
       const callback = (res) => {
-        // log(`STATUS: ${res.statusCode}`);
         // log('===> res', res)
-        // console.log('===> res', res);
-        // console.log('===> res.headers', res.headers);
 
         res.setEncoding('utf8');
         res.on('data', (data) => {
@@ -58,14 +56,12 @@ const makeSockerRequester = (nodeId) => {
           // log('===> docker response close');
           resolve(responses);
         });
-        // res.on('*', data => {
-        //   log('===> dekho', data);
-        // });
       };
 
-      // log('===> docker request data: ', options);
+      log('===> docker request data: ', options);
+      console.log('===> docker request body', body);
       const clientRequest = http.request(options, callback);
-      clientRequest.write(body);
+      if (body) clientRequest.write(body);
       clientRequest.end();
     }
     catch (e) {

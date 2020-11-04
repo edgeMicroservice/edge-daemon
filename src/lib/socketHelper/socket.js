@@ -62,75 +62,104 @@ const initializeSocket = (nodeId) => {
         const formattedRequest = formatToJson(msgStr);
         console.log('===> formattedRequest', formattedRequest);
 
-        const isGatewayDeployment = isGatewayDeploymentRequest(formattedRequest);
+        // const isGatewayDeployment = isGatewayDeploymentRequest(formattedRequest);
         const isContainerDeployment = isContainerDeploymentRequest(formattedRequest);
-        console.log('===> isGatewayDeployment', isGatewayDeployment);
+        // console.log('===> isGatewayDeployment', isGatewayDeployment);
         console.log('===> isContainerDeployment', isContainerDeployment);
 
-        if (isGatewayDeployment && isContainerDeployment && !isGatewayDeployed) {
-          isGatewayDeployed = true;
-          makeDockerRequester(nodeId).request(formattedRequest)
-            .then((response) => {
-              console.log('===> dockerRequest response', response);
-            })
-            .catch((error) => {
-              console.log('===> dockerRequest error', error);
-            });
-        }
+        // if (isGatewayDeployment && isContainerDeployment && !isGatewayDeployed) {
+        //   isGatewayDeployed = true;
+        //   makeDockerRequester(nodeId).request(formattedRequest)
+        //     .then((response) => {
+        //       console.log('===> dockerRequest response', response);
+        //     })
+        //     .catch((error) => {
+        //       console.log('===> dockerRequest error', error);
+        //     });
+        // }
 
-        if (isContainerDeployment && !isGatewayDeployment && !isEdgeDeployed) {
-          makeHttpRequester(nodeId).request(formattedRequest);
-          isEdgeDeployed = true;
-        }
+        // if (isContainerDeployment && !isGatewayDeployment && !isEdgeDeployed) {
+        //   makeHttpRequester(nodeId).request(formattedRequest);
+        //   isEdgeDeployed = true;
+        // }
 
-        const isContainerKillReq = isContainerKillRequest(formattedRequest);
-        console.log('===> isContainerKillReq', isContainerKillReq);
+        // const isContainerKillReq = isContainerKillRequest(formattedRequest);
+        // console.log('===> isContainerKillReq', isContainerKillReq);
 
-        if (isContainerKillReq && isGatewayDeployed) {
-          stream.end();
-        }
-        else {
-          makeSockerRequester(nodeId).request(formattedRequest)
-            .then((responses) => {
-              try {
-                // plain/text
-                log('Incoming in then, responses: ', responses);
+        // if (isContainerKillReq && isGatewayDeployed) {
+        //   stream.end();
+        // }
+        // else {
+        makeSockerRequester(nodeId).request(formattedRequest)
+          .then((responses) => {
+            try {
+              console.log('===> responses', responses);
 
-                // responses.forEach(({ status, headers, body }) => {
-                //   const output = formatToHttp(status, headers);
-                //   console.log('===> response', { status, headers, body });
-                //   console.log('===> output', output);
-                //   stream.write(output);
-                //   console.log('===> body', body);
-                //   stream.write(body);
-                // });
+              stream.setEncoding('utf8');
 
-                responses.forEach(({ status, headers, body }) => {
-                  stream.write(`${[
-                    'HTTP/1.1 200 OK',
-                    'Content-Type: plain/text; charset=UTF-8',
-                    'Content-Encoding: UTF-8',
-                    'Accept-Ranges: bytes',
-                    'Connection: close',
-                  ].join('\r\n')}\r\n\r\n`);
-                  if (body) stream.write(body);
+              const { status, headers } = responses[0];
+              const { httpHeaders, isChunked } = formatToHttp(status, headers);
+              console.log('===> httpHeaders', httpHeaders);
+              
+              if (isChunked) {
+                stream.write(httpHeaders);
+                responses.forEach(({ body }, index) => {
+                  if (body && body.length > 0) {
+                    console.log('===> body', body);
+                    // stream.write(body);
+                    const size = (body.length).toString(16);
+                    // const size = Buffer.from(body.length.toString(), 'utf8').toString('hex');
+                    console.log('===> size', size);
+                    stream.write(`${size}\r\n`);
+                    stream.write(body);
+                    stream.write('\r\n');
+                    // if (index !== responses.length - 1) stream.write('\r\n');
+                  }
+                  // const hexaBuffer = (new Buffer(body, 'utf8')).toString('hex');
+                  // console.log('===> hexaBuffer', hexaBuffer);
+                  // stream.write(hexaBuffer);
                 });
 
-                setTimeout(() => {
-                  console.log('===> closing Incoming stream');
-                  stream.end();
-                }, 1000);
+                console.log('===> closing Incoming stream');
+                stream.end('0\r\n\r\n');
               }
-              catch (error) {
-                console.log('===> error occured while writing data to stream', error);
+              else {
+                if (responses[0].body) {
+                  stream.write(`${httpHeaders}${responses[0].body}`);
+                }
+                else {
+                  stream.write(httpHeaders);
+                }
               }
-            })
-            .catch((data) => {
-              log('Incoming in catch');
-              stream.write(data);
-              stream.end();
-            });
-        }
+
+
+
+              // responses.forEach(({ status, headers, body }) => {
+              //   stream.write(`${[
+              //     'HTTP/1.1 200 OK',
+              //     'Content-Type: plain/text; charset=UTF-8',
+              //     'Content-Encoding: UTF-8',
+              //     'Accept-Ranges: bytes',
+              //     'Connection: close',
+              //   ].join('\r\n')}\r\n\r\n`);
+              //   if (body) stream.write(body);
+              // });
+
+              // setTimeout(() => {
+              //   console.log('===> closing Incoming stream');
+              //   stream.end();
+              // }, 1000);
+            }
+            catch (error) {
+              console.log('===> error occured while writing data to stream', error);
+            }
+          })
+          .catch((data) => {
+            log('Incoming in catch');
+            stream.write(data);
+            stream.end();
+          });
+        // }
       });
     })
       .listen(socket)
@@ -151,7 +180,7 @@ const initializeSocket = (nodeId) => {
         const clients = Object.keys(connections);
         while (clients.length) {
           const client = clients.pop();
-          connections[client].write('__disconnect');
+          // connections[client].write('__disconnect');
           connections[client].end();
         }
       }

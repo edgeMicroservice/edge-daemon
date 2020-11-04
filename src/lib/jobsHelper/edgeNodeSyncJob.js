@@ -89,7 +89,7 @@ const start = () => getClient()
   })
   .then(() => {
     syncNodes();
-    setInterval(syncNodes, nodeSync.jobInterval * 1000);
+    // setInterval(syncNodes, nodeSync.jobInterval * 1000);
   });
 
 module.exports = {

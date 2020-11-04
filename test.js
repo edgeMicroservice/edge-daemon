@@ -1,65 +1,159 @@
-/* eslint-disable no-unused-vars */
-const http = require('http');
-const Promise = require('bluebird');
-const { response } = require('express');
+const net = require('net');
 
-const makeSockerRequester = (nodeId) => {
-  const DOCKER_SOCKET_FILE = '/var/run/docker.sock';
-
-  const request = () => new Promise((resolve, reject) => {
-    // resolve();
-    // return;
-    const options = {
-      socketPath: DOCKER_SOCKET_FILE,
-      path: '/containers/create?name=9009ae70c0e60bcea5638f1125eccf8a29c0ab067dd62f618738bb6d9cc700d1-mreport',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    };
-
-    const responses = [];
-    try {
-      const callback = (res) => {
-        res.setEncoding('utf8');
-        res.on('data', (data) => {
-          responses.push({
-            headers: res.headers,
-            body: data,
-            status: {
-              code: res.statusCode,
-              message: res.statusMessage,
-            },
-          });
-        });
-        res.on('error', (data) => {
-          reject(data);
-        });
-        res.on('close', (data) => {
-          resolve(responses);
-        });
+function createWebServer(requestHandler) {
+  const server = net.createServer();
+  server.on('connection', handleConnection);
+  
+  function handleConnection(socket) {
+    // Subscribe to the readable event once so we can start calling .read()
+    socket.once('readable', function() {
+      // Set up a buffer to hold the incoming data
+      let reqBuffer = new Buffer('');
+      // Set up a temporary buffer to read in chunks
+      let buf;
+      let reqHeader;
+      while(true) {
+        // Read data from the socket
+        buf = socket.read();
+        // Stop if there's no more data
+        if (buf === null) break;
+  
+        // Concatenate existing request buffer with new data
+        reqBuffer = Buffer.concat([reqBuffer, buf]);
+  
+        // Check if we've reached \r\n\r\n, indicating end of header
+        let marker = reqBuffer.indexOf('\r\n\r\n')
+        if (marker !== -1) {
+          // If we reached \r\n\r\n, there could be data after it. Take note.
+          let remaining = reqBuffer.slice(marker + 4);
+          // The header is everything we read, up to and not including \r\n\r\n
+          reqHeader = reqBuffer.slice(0, marker).toString();
+          // This pushes the extra data we read back to the socket's readable stream
+          socket.unshift(remaining);
+          break;
+        }
+      }
+      
+      /* Request-related business */
+      // Start parsing the header
+      const reqHeaders = reqHeader.split('\r\n');
+      // First line is special
+      const reqLine = reqHeaders.shift().split(' ');
+      // Further lines are one header per line, build an object out of it.
+      const headers = reqHeaders.reduce((acc, currentHeader) => {
+        const [key, value] = currentHeader.split(':');
+        return {
+          ...acc,
+          [key.trim().toLowerCase()]: value.trim()
+        };
+      }, {});
+      // This object will be sent to the handleRequest callback.
+      const request = {
+        method: reqLine[0],
+        url: reqLine[1],
+        httpVersion: reqLine[2].split('/')[1],
+        headers,
+                // The user of this web server can directly read from the socket to get the request body
+        socket
       };
 
-      // log('===> docker request data: ', options);
-      const clientRequest = http.request(options, callback);
-      clientRequest.write('{"ExposedPorts":{"80/tcp":{}},"Env":["HZN_EXCHANGE_URL=http://192.168.1.89:3090/v1/","HZN_CPUS=4","HZN_RAM=3781","HZN_DEPLOYMENT_LOCATION=edge","HZN_DEVICE_ID=018227a7036a490e","HZN_ESS_CERT=/ess-cert/cert.pem","HZN_PRIVILEGED=false","HZN_HOST_IPS=127.0.0.1,172.17.0.3","HZN_ORGANIZATION=myorg","HZN_ESS_AUTH=/ess-auth/auth.json","HZN_ESS_API_PROTOCOL=secure-unix","HZN_ESS_API_ADDRESS=/var/tmp/horizon/anax_018227a7036a490e/fss-domain-socket/essapi.sock","HZN_ESS_API_PORT=0","HZN_ARCH=amd64","HZN_HARDWAREID=00ec2568daa80cd925a81c119cdf713b1fb7566d","HZN_AGREEMENTID=9009ae70c0e60bcea5638f1125eccf8a29c0ab067dd62f618738bb6d9cc700d1","HZN_PATTERN="],"Cmd":null,"Image":"kevintoor/mreport@sha256:1546c0c44601b13ec26f9891f0fd2f100c71b93dd3760889d16a4a3dcc49093f","Volumes":{"/ess-auth":{},"/ess-cert":{},"/service_config":{},"/var/tmp/horizon/anax_018227a7036a490e/fss-domain-socket":{}},"Entrypoint":null,"Labels":{"openhorizon.anax.agreement_id":"9009ae70c0e60bcea5638f1125eccf8a29c0ab067dd62f618738bb6d9cc700d1","openhorizon.anax.deployment_description_hash":"5t4CX22E4l-JLgBgc1Hjt6O27sg=","openhorizon.anax.service_name":"mreport","openhorizon.anax.variation":""},"HostConfig":{"Binds":["9009ae70c0e60bcea5638f1125eccf8a29c0ab067dd62f618738bb6d9cc700d1:/service_config:rw","/var/tmp/horizon/anax_018227a7036a490e/fss-domain-socket:/var/tmp/horizon/anax_018227a7036a490e/fss-domain-socket","/var/tmp/horizon/anax_018227a7036a490e/ess-auth/9009ae70c0e60bcea5638f1125eccf8a29c0ab067dd62f618738bb6d9cc700d1:/ess-auth:ro","/var/tmp/horizon/anax_018227a7036a490e/ess-auth/SSL/cert:/ess-cert:ro"],"PortBindings":{"80/tcp":[{"HostIp":"0.0.0.0","HostPort":"9080/tcp"}]},"NetworkMode":"9009ae70c0e60bcea5638f1125eccf8a29c0ab067dd62f618738bb6d9cc700d1","ConsoleSize":[0,0],"RestartPolicy":{"Name":"always"},"LogConfig":{"Type":"syslog","Config":{"tag":"workload-9009ae70c0e60bcea5638f1125eccf8a29c0ab067dd62f618738bb6d9cc700d1_mreport"}},"Memory":3964665856},"NetworkingConfig":{"EndpointsConfig":{"9009ae70c0e60bcea5638f1125eccf8a29c0ab067dd62f618738bb6d9cc700d1":{"Aliases":["mreport"]}}}}');
-      clientRequest.end();
-    }
-    catch (e) {
-      console.log('===> MAJOR ERROR ALERT', e);
-      reject();
-    }
-  });
+      /* Response-related business */
+      // Initial values
+      let status = 200, statusText = 'OK', headersSent = false, isChunked = false;
+      const responseHeaders = {
+        server: 'my-custom-server'
+      };
+      function setHeader(key, value) {
+        responseHeaders[key.toLowerCase()] = value;
+      }
+      function sendHeaders() {
+        // Only do this once :)
+        if (!headersSent) {
+          headersSent = true;
+          // Add the date header
+          setHeader('date', new Date().toGMTString());
+          // Send the status line
+          socket.write(`HTTP/1.1 ${status} ${statusText}\r\n`);
+          // Send each following header
+          Object.keys(responseHeaders).forEach(headerKey => {
+            socket.write(`${headerKey}: ${responseHeaders[headerKey]}\r\n`);
+          });
+          // Add the final \r\n that delimits the response headers from body
+          socket.write('\r\n');
+        }
+      }
+      const response = {
+        write(chunk) {
+          if (!headersSent) {
+            // If there's no content-length header, then specify Transfer-Encoding chunked
+            if (!responseHeaders['content-length']) {
+              isChunked = true;
+              setHeader('transfer-encoding', 'chunked');
+            }
+            sendHeaders();
+          }
+          if (isChunked) {
+            const size = chunk.length.toString(16);
+            socket.write(`${size}\r\n`);
+            socket.write(chunk);
+            socket.write('\r\n');
+          }
+          else {
+            socket.write(chunk);
+          }
+        },
+        end(chunk) {
+          if (!headersSent) {
+            // We know the full length of the response, let's set it
+            if (!responseHeaders['content-length']) {
+              // Assume that chunk is a buffer, not a string!
+              setHeader('content-length', chunk ? chunk.length : 0);
+            }
+            sendHeaders();
+          }
+          if (isChunked) {
+            if (chunk) {
+              const size = (chunk.length).toString(16);
+              socket.write(`${size}\r\n`);
+              socket.write(chunk);
+              socket.write('\r\n');
+            }
+            socket.end('0\r\n\r\n');
+          }
+          else {
+            socket.end(chunk);
+          }
+        },
+        setHeader,
+        setStatus(newStatus, newStatusText) { status = newStatus, statusText = newStatusText },
+        // Convenience method to send JSON through server
+        json(data) {
+          if (headersSent) {
+            throw new Error('Headers sent, cannot proceed to send JSON');
+          }
+          const json = new Buffer(JSON.stringify(data));
+          setHeader('content-type', 'application/json; charset=utf-8');
+          setHeader('content-length', json.length);
+          sendHeaders();
+          socket.end(json);
+        }
+      };
+      
+      // Send the request to the handler!
+      requestHandler(request, response);
+    });
+  }
 
   return {
-    request,
+    listen: (port) => server.listen(port)
   };
-};
+}
 
-makeSockerRequester().request()
-  .then((data) => {
-    console.log('===> data', data);
-  })
-  .catch((error) => {
-    console.log('===> error', error);
-  });
+const webServer = createWebServer((req, res) => {
+  // This is the as our original code with the http module :)
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  res.setHeader('Content-Type','text/plain');
+  res.end('Hello World!');
+});
+
+webServer.listen(3000);
