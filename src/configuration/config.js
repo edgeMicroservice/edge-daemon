@@ -59,6 +59,7 @@ module.exports = (() => {
       },
       development: {
         deployServicesOnDocker: process.env.DEVELOPMENT_DEPLOY_SERVICES_ON_DOCKER === 'yes',
+        logAnaxCommunication: process.env.LOG_ANAX_COMMUNICATION === 'yes',
       },
     },
   });

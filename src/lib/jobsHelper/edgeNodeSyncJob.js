@@ -6,7 +6,7 @@ const logger = require('@bananabread/sumologic-winston-logger');
 
 const { saveAndUpdateNode } = require('../../models/nodeModel');
 
-const { nodeSync } = require('../../configuration/config');
+// const { nodeSync } = require('../../configuration/config');
 const {
   getNodes,
   getClient,

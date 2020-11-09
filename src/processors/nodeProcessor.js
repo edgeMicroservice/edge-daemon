@@ -1,5 +1,5 @@
 const nodeModel = require('../models/nodeModel');
-const daemonModel = require('../models/daemonModel');
+const anaxSocketModel = require('../models/anaxSocketModel');
 
 const getNodes = (mdeployStatuses, correlationId) => nodeModel.getAllNodes(correlationId)
   .then((nodes) => {
@@ -8,9 +8,11 @@ const getNodes = (mdeployStatuses, correlationId) => nodeModel.getAllNodes(corre
     return nodes.filter((node) => mdeployStatuses.includes(node.mdeployStatus));
   });
 
-const getDaemon = (nodeId, correlationId) => daemonModel.getDaemonById(nodeId, correlationId);
+const getNodeDetails = (nodeId, correlationId) => nodeModel.getNodeById(nodeId, correlationId)
+  .then((node) => anaxSocketModel.findAnaxSocketById(nodeId, correlationId)
+    .then((nodeDetails) => ({ ...node, anaxSocketDetails: { ...nodeDetails } })));
 
 module.exports = {
   getNodes,
-  getDaemon,
+  getNodeDetails,
 };

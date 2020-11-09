@@ -1,14 +1,10 @@
-/* eslint-disable no-unused-vars */
 const http = require('http');
 const Promise = require('bluebird');
-const { response } = require('express');
 
-const makeLogger = require('./logger');
+const { SERVER_TYPE, LOG_TYPE, saveLog } = require('../../models/anaxSocketModel');
 
 const makeSockerRequester = (nodeId) => {
   const DOCKER_SOCKET_FILE = '/var/run/docker.sock';
-
-  const { log } = makeLogger(nodeId);
 
   const request = ({
     method,
@@ -16,9 +12,7 @@ const makeSockerRequester = (nodeId) => {
     endpoint,
     headers,
     body,
-  }) => new Promise((resolve, reject) => {
-    // resolve();
-    // return;
+  }, correlationId) => new Promise((resolve, reject) => {
     const options = {
       socketPath: DOCKER_SOCKET_FILE,
       path: endpoint,
@@ -26,46 +20,39 @@ const makeSockerRequester = (nodeId) => {
       headers,
       host,
     };
+    saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.DOCKER_PROXY_FACING, 'Sending request', { options }, correlationId);
 
-    const responses = [];
+    const response = {};
 
     try {
       const callback = (res) => {
-        // log('===> res', res)
+        response.data = [];
+        response.headers = res.headers;
+        response.status = {
+          code: res.statusCode,
+          message: res.statusMessage,
+        };
 
         res.setEncoding('utf8');
         res.on('data', (data) => {
-          // log('===> docker response data: ', data);
-          responses.push({
-            headers: res.headers,
-            body: data,
-            status: {
-              code: res.statusCode,
-              message: res.statusMessage,
-            },
-          });
+          response.data.push(data);
         });
-        res.on('error', (data) => {
-          // log('===> ERROR docker response error: ', data);
-          reject(data);
+        res.on('error', (error) => {
+          saveLog(nodeId, LOG_TYPE.ERROR, SERVER_TYPE.DOCKER_PROXY_FACING, 'Error response received', { error }, correlationId);
+          reject(error);
         });
-        res.on('close', (data) => {
-          // if (!data) {
-          //   log('nothing to see');
-          // }
-          // log('===> docker response close');
-          resolve(responses);
+        res.on('close', () => {
+          saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.DOCKER_PROXY_FACING, 'Successful response received', { response }, correlationId);
+          resolve(response);
         });
       };
 
-      log('===> docker request data: ', options);
-      console.log('===> docker request body', body);
       const clientRequest = http.request(options, callback);
       if (body) clientRequest.write(body);
       clientRequest.end();
     }
-    catch (e) {
-      console.log('===> MAJOR ERROR ALERT', e);
+    catch (error) {
+      saveLog(nodeId, LOG_TYPE.ERROR, SERVER_TYPE.DOCKER_PROXY_FACING, 'Error occured while requesting docker socket', { error }, correlationId);
       reject();
     }
   });

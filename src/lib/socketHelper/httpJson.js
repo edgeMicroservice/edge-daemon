@@ -1,8 +1,5 @@
 const formatToJson = (http) => {
   const httpLines = http.split('\r\n');
-
-  // console.log(httpLines)
-
   const method = httpLines[0].split(' ')[0];
   const endpoint = httpLines[0].split(' ')[1];
   const host = httpLines[1].split(' ')[1];
@@ -30,37 +27,15 @@ const formatToJson = (http) => {
 
 const capitalize = (text) => {
   const pieces = text.split('-');
-
-  const capitalized = pieces.map((piece) => {
-    return piece.charAt(0).toUpperCase() + piece.slice(1);
-  });
-
+  const capitalized = pieces.map((piece) => piece.charAt(0).toUpperCase() + piece.slice(1));
   return capitalized.join('-');
-}
+};
 
 const formatToHttp = (status, headers = {}) => {
-  // eslint-disable-next-line no-param-reassign
-  // delete headers.connection;
-  // eslint-disable-next-line no-param-reassign
-  // delete headers['transfer-encoding'];
-  // eslint-disable-next-line no-param-reassign
-  // headers['Content-Encoding'] = 'UTF-8';
   let isChunked = false;
-  if (!headers['transfer-encoding']) {
-    console.log('===> response without chunk');
-    isChunked= false;
-  } else {
-    isChunked = true;
-    console.log('===> response with chunk');
-  }
+  if (headers['transfer-encoding']) isChunked = true;
+
   const httpObj = [`HTTP/1.1 ${status.code} ${status.message}`];
-  // if (headers['content-type']) {
-  //   console.log('===> content-type found', headers['content-type']);
-  //   headers['content-type'] = `${headers['content-type']}; charset=UTF-8`;
-  //   console.log('===> content-type updated', headers['content-type']);
-  // } else {
-  //   console.log('===> content-type NOT found');
-  // }
 
   Object.entries(headers).forEach(([key, value]) => {
     const capitalizedKey = capitalize(key);

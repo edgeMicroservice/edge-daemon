@@ -1,6 +1,7 @@
-/* eslint-disable no-unused-vars */
 const net = require('net');
 const fs = require('fs-extra');
+
+const { getCorrelationId } = require('@bananabread/request-helper');
 
 const {
   hzn: {
@@ -8,9 +9,12 @@ const {
   },
 } = require('../../configuration/config');
 
+const { SERVER_TYPE, LOG_TYPE, saveLog } = require('../../models/anaxSocketModel');
+
 const makeSockerRequester = require('./socketRequester');
 const makeHttpRequester = require('./httpRequester');
 const makeDockerRequester = require('./dockerRequester');
+
 const {
   isContainerDeploymentRequest,
   isContainerKillRequest,
@@ -22,165 +26,132 @@ const {
   formatToHttp,
 } = require('./httpJson');
 
-const makeLogger = require('./logger');
-
 let isEdgeDeployed = false;
 let isGatewayDeployed = false;
 
 const initializeSocket = (nodeId) => {
-  const { log } = makeLogger(nodeId);
-
   const connections = {};
   let SHUTDOWN = false;
   const SOCKET_FILE = `${nodeSocketsDir}/edgeDaemon_${nodeId}.sock`;
   let server;
 
-  log('Loading interprocess communications test');
+  saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.ANAX_FACING, 'Loading interprocess communications');
 
   function createServer(socket) {
-    log('Creating server.');
+    saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.ANAX_FACING, 'Creating server');
     server = net.createServer((stream) => {
-      log('Incoming connection acknowledged.');
+      const correlationId = getCorrelationId();
+      saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.ANAX_FACING, 'Incoming connection acknowledged', undefined, correlationId);
 
       const self = Date.now();
       connections[self] = (stream);
 
       stream.on('end', () => {
-        log('Incoming client disconnected.');
+        saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.ANAX_FACING, 'Incoming client disconnected', undefined, correlationId);
         delete connections[self];
       });
 
-      stream.on('error', (err) => {
-        console.log('===> error on incoming socket stream: ', err);
+      stream.on('error', (error) => {
+        saveLog(nodeId, LOG_TYPE.ERROR, SERVER_TYPE.ANAX_FACING, 'Error occured on incoming socket', { error }, correlationId);
       });
 
       stream.on('data', (msg) => {
         const msgStr = msg.toString();
 
-        log('Incoming request received on socket:', { msgStr });
-
         const formattedRequest = formatToJson(msgStr);
-        console.log('===> formattedRequest', formattedRequest);
 
-        // const isGatewayDeployment = isGatewayDeploymentRequest(formattedRequest);
+        saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.ANAX_FACING, 'Incoming request', undefined, correlationId);
+
+        const isGatewayDeployment = isGatewayDeploymentRequest(formattedRequest);
         const isContainerDeployment = isContainerDeploymentRequest(formattedRequest);
-        // console.log('===> isGatewayDeployment', isGatewayDeployment);
-        console.log('===> isContainerDeployment', isContainerDeployment);
+        const isContainerKillReq = isContainerKillRequest(formattedRequest);
+        saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.ANAX_FACING, 'Request type', { isGatewayDeployment, isContainerDeployment, isContainerKillReq }, correlationId);
 
-        // if (isGatewayDeployment && isContainerDeployment && !isGatewayDeployed) {
-        //   isGatewayDeployed = true;
-        //   makeDockerRequester(nodeId).request(formattedRequest)
-        //     .then((response) => {
-        //       console.log('===> dockerRequest response', response);
-        //     })
-        //     .catch((error) => {
-        //       console.log('===> dockerRequest error', error);
-        //     });
-        // }
+        if (isGatewayDeployment && isContainerDeployment && !isGatewayDeployed) {
+          isGatewayDeployed = true;
+          makeDockerRequester(nodeId).request(formattedRequest, correlationId)
+            .then((response) => {
+              saveLog(
+                nodeId, LOG_TYPE.INFO, SERVER_TYPE.ANAX_FACING, 'Success response from service deployment docker request', { response }, correlationId,
+              );
+            })
+            .catch((error) => {
+              saveLog(
+                nodeId, LOG_TYPE.ERROR, SERVER_TYPE.ANAX_FACING, 'Error response from service deployment docker request', { error }, correlationId,
+              );
+            });
+        }
 
-        // if (isContainerDeployment && !isGatewayDeployment && !isEdgeDeployed) {
-        //   makeHttpRequester(nodeId).request(formattedRequest);
-        //   isEdgeDeployed = true;
-        // }
+        if (isContainerDeployment && !isGatewayDeployment && !isEdgeDeployed) {
+          makeHttpRequester(nodeId).request(formattedRequest, correlationId);
+          isEdgeDeployed = true;
+        }
 
-        // const isContainerKillReq = isContainerKillRequest(formattedRequest);
-        // console.log('===> isContainerKillReq', isContainerKillReq);
+        if (isContainerKillReq && isGatewayDeployed) {
+          stream.end();
+        }
+        else {
+          makeSockerRequester(nodeId).request(formattedRequest, correlationId)
+            .then((response) => {
+              try {
+                stream.setEncoding('utf8');
+                saveLog(
+                  nodeId, LOG_TYPE.INFO, SERVER_TYPE.ANAX_FACING, 'Sending response from docker socket', { response }, correlationId,
+                );
 
-        // if (isContainerKillReq && isGatewayDeployed) {
-        //   stream.end();
-        // }
-        // else {
-        makeSockerRequester(nodeId).request(formattedRequest)
-          .then((responses) => {
-            try {
-              console.log('===> responses', responses);
+                const { status, headers, data: responseData } = response;
+                const { httpHeaders, isChunked } = formatToHttp(status, headers);
 
-              stream.setEncoding('utf8');
-
-              const { status, headers } = responses[0];
-              const { httpHeaders, isChunked } = formatToHttp(status, headers);
-              console.log('===> httpHeaders', httpHeaders);
-              
-              if (isChunked) {
-                stream.write(httpHeaders);
-                responses.forEach(({ body }, index) => {
-                  if (body && body.length > 0) {
-                    console.log('===> body', body);
-                    // stream.write(body);
-                    const size = (body.length).toString(16);
-                    // const size = Buffer.from(body.length.toString(), 'utf8').toString('hex');
-                    console.log('===> size', size);
-                    stream.write(`${size}\r\n`);
-                    stream.write(body);
-                    stream.write('\r\n');
-                    // if (index !== responses.length - 1) stream.write('\r\n');
-                  }
-                  // const hexaBuffer = (new Buffer(body, 'utf8')).toString('hex');
-                  // console.log('===> hexaBuffer', hexaBuffer);
-                  // stream.write(hexaBuffer);
-                });
-
-                console.log('===> closing Incoming stream');
-                stream.end('0\r\n\r\n');
-              }
-              else {
-                if (responses[0].body) {
-                  stream.write(`${httpHeaders}${responses[0].body}`);
+                if (isChunked) {
+                  stream.write(httpHeaders);
+                  responseData.forEach((body) => {
+                    if (body && body.length > 0) {
+                      const size = (body.length).toString(16);
+                      stream.write(`${size}\r\n`);
+                      stream.write(body);
+                      stream.write('\r\n');
+                    }
+                  });
+                  stream.end('0\r\n\r\n');
+                }
+                else if (response.data[0]) {
+                  stream.write(`${httpHeaders}${response.data[0]}`);
                 }
                 else {
                   stream.write(httpHeaders);
                 }
               }
-
-
-
-              // responses.forEach(({ status, headers, body }) => {
-              //   stream.write(`${[
-              //     'HTTP/1.1 200 OK',
-              //     'Content-Type: plain/text; charset=UTF-8',
-              //     'Content-Encoding: UTF-8',
-              //     'Accept-Ranges: bytes',
-              //     'Connection: close',
-              //   ].join('\r\n')}\r\n\r\n`);
-              //   if (body) stream.write(body);
-              // });
-
-              // setTimeout(() => {
-              //   console.log('===> closing Incoming stream');
-              //   stream.end();
-              // }, 1000);
-            }
-            catch (error) {
-              console.log('===> error occured while writing data to stream', error);
-            }
-          })
-          .catch((data) => {
-            log('Incoming in catch');
-            stream.write(data);
-            stream.end();
-          });
-        // }
+              catch (error) {
+                saveLog(
+                  nodeId, LOG_TYPE.ERROR, SERVER_TYPE.ANAX_FACING, 'Error occured while writing data to stream', { error }, correlationId,
+                );
+              }
+            })
+            .catch((error) => {
+              saveLog(
+                nodeId, LOG_TYPE.ERROR, SERVER_TYPE.ANAX_FACING, 'Error received from docker request server', { error }, correlationId,
+              );
+              stream.end();
+            });
+        }
       });
     })
       .listen(socket)
-      .on('connection', (sct) => {
-        // log('Client connected.');
-      });
+      .on('connection', () => {});
 
     return server;
   }
 
-  log('Checking for leftover socket.');
+  saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.ANAX_FACING, 'Checking for left over server');
 
   function cleanup() {
     if (!SHUTDOWN) {
       SHUTDOWN = true;
-      log('\n', 'Terminating.', '\n');
+      saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.ANAX_FACING, 'Terminating server');
       if (Object.keys(connections).length) {
         const clients = Object.keys(connections);
         while (clients.length) {
           const client = clients.pop();
-          // connections[client].write('__disconnect');
           connections[client].end();
         }
       }
@@ -194,7 +165,7 @@ const initializeSocket = (nodeId) => {
     .then(() => fs.stat(SOCKET_FILE)
       .then(() => fs.unlink(SOCKET_FILE)
         .catch((error) => {
-          console.log('===> error occured while removing old socket file', error);
+          saveLog(nodeId, LOG_TYPE.ERROR, SERVER_TYPE.ANAX_FACING, 'Error occured while removing old socket file', { error });
         }))
       .catch(() => { })
       .then(() => {
@@ -202,25 +173,6 @@ const initializeSocket = (nodeId) => {
         fs.chmodSync(SOCKET_FILE, 777);
       }))
     .then(() => SOCKET_FILE);
-
-  // fs.stat(SOCKET_FILE, (err, stats) => {
-  //   if (err) {
-  //     // start server
-  //     log('No leftover socket found.');
-  //     server = createServer(SOCKET_FILE);
-  //     fs.chmodSync(SOCKET_FILE, 777);
-  //     return;
-  //   }
-  //   // remove file then start server
-  //   log('Removing leftover socket.');
-  //   fs.unlink(SOCKET_FILE, (error) => {
-  //     if (err) {
-  //       // This should never happen.
-  //       log(error); process.exit(0);
-  //     }
-  //     server = createServer(SOCKET_FILE);
-  //   });
-  // });
 };
 
 module.exports = {

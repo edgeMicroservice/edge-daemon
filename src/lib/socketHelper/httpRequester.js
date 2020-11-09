@@ -1,38 +1,15 @@
-/* eslint-disable no-unused-vars */
 const rp = require('request-promise');
-const util = require('util');
 
 const config = require('../../configuration/config');
+const { getCurrentNode } = require('../../external/jsonRPCRequests');
+const { SERVER_TYPE, LOG_TYPE, saveLog } = require('../../models/anaxSocketModel');
 
 const mdeployUrl = config.dependencies.MDEPLOY.url;
-const { getCurrentNode } = require('../../external/jsonRPCRequests');
-const makeLogger = require('./logger');
 
 const makeHttpRequester = (nodeId) => {
-  const { log } = makeLogger(nodeId);
-
   const request = ({
     method,
-    host,
-    endpoint,
-    headers,
-    body,
-  }) => {
-    log('===> request received on httpRequester', {
-      method,
-      host,
-      endpoint,
-      headers,
-      body,
-    });
-    console.log('===> request received on httpRequester', util.inspect({
-      method,
-      host,
-      endpoint,
-      headers,
-      body,
-    }, false, null, true /* enable colors */));
-    // return;
+  }, correlationId) => {
     if (method === 'POST') {
       getCurrentNode()
         .then((gatewayNode) => {
@@ -54,18 +31,17 @@ const makeHttpRequester = (nodeId) => {
             },
             json: true,
           };
-          log('===> sending mdeploy post request', options);
-          console.log('===> options', util.inspect(options, false, null, true /* enable colors */));
+          saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.MDEPLOY_FACING, 'Requesting mdeploy', { options }, correlationId);
           return rp(options)
             .then((data) => {
-              log('===> success response from mdeploy', data.data);
+              saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.MDEPLOY_FACING, 'Successful response received from mdeploy', { data }, correlationId);
             })
             .catch((error) => {
-              log('===> failure response from mdeploy', error);
+              saveLog(nodeId, LOG_TYPE.ERROR, SERVER_TYPE.MDEPLOY_FACING, 'Error response received from mdeploy', { error }, correlationId);
             });
         })
-        .catch((err) => {
-          console.log('===> error from getCurrentNode', err);
+        .catch((error) => {
+          saveLog(nodeId, LOG_TYPE.ERROR, SERVER_TYPE.MDEPLOY_FACING, 'Error occured while sending request to mdeploy', { error }, correlationId);
         });
     }
   };
@@ -76,27 +52,3 @@ const makeHttpRequester = (nodeId) => {
 };
 
 module.exports = makeHttpRequester;
-
-// const options = {
-//   uri: `${mdeployUrl}/batchOps`,
-//   method: 'POST',
-//   body: {
-//     nodes: [
-//       nodeId,
-//     ],
-//     request: {
-//       endpoint: '/containers',
-//       method: 'POST',
-//       body: {
-//         name: 'mreport-v1',
-//         imageName: 'mreport-v1',
-//         env: {
-//           'MCM.BASE_API_PATH': '/mreport/v1',
-//           'MCM.WEBSOCKET_SUPPORT': 'true',
-//         },
-//         imageHostNodeId: gatewayNode.nodeId,
-//       },
-//     },
-//   },
-//   json: true,
-// };

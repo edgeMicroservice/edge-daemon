@@ -43,6 +43,7 @@
     "@bananabread/init": "3.2.1",
     "@bananabread/oauth-helper": "1.9.1",
     "@bananabread/response-helper": "2.3.2",
+    "@bananabread/request-helper": "1.7.0",
     "@bananabread/sumologic-winston-logger": "1.5.2",
     "@bananabread/swagger-helper": "2.2.3",
     "@bananabread/systeminfo": "2.3.3",

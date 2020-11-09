@@ -1,14 +1,10 @@
-/* eslint-disable no-unused-vars */
 const http = require('http');
 const Promise = require('bluebird');
-const { response } = require('express');
 
-const makeLogger = require('./logger');
+const { SERVER_TYPE, LOG_TYPE, saveLog } = require('../../models/anaxSocketModel');
 
 const makeDockerRequester = (nodeId) => {
   const DOCKER_SOCKET_FILE = '/var/run/docker.sock';
-
-  const { log } = makeLogger(nodeId);
 
   const request = ({
     method,
@@ -16,12 +12,9 @@ const makeDockerRequester = (nodeId) => {
     endpoint,
     headers,
     body,
-  }) => new Promise((resolve, reject) => {
-    // resolve();
-    // return;
+  }, correlationId) => new Promise((resolve, reject) => {
     const options = {
       socketPath: DOCKER_SOCKET_FILE,
-      // path: '/containers/create?name=9972b90575d30a16d2cc20cc1d1a5f9c95e3ce65b0cb16e6475c2d24b12eee51-mreport',
       path: endpoint,
       method,
       body,
@@ -32,14 +25,9 @@ const makeDockerRequester = (nodeId) => {
     const responses = [];
     try {
       const callback = (res) => {
-        // log(`STATUS: ${res.statusCode}`);
-        // log('===> res', res)
-        // console.log('===> res', res);
-        // console.log('===> res.headers', res.headers);
-
         res.setEncoding('utf8');
         res.on('data', (data) => {
-          // log('===> docker response data: ', data);
+          saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.DOCKER_FACING, 'Successful docker response received', { data }, correlationId);
           responses.push({
             headers: res.headers,
             body: data,
@@ -50,27 +38,19 @@ const makeDockerRequester = (nodeId) => {
           });
         });
         res.on('error', (data) => {
-          // log('===> ERROR docker response error: ', data);
+          saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.DOCKER_FACING, 'Error docker response received', { data }, correlationId);
           reject(data);
         });
-        res.on('close', (data) => {
-          // if (!data) {
-          //   log('nothing to see');
-          // }
-          // log('===> docker response close');
+        res.on('close', () => {
           resolve(responses);
         });
-        // res.on('*', data => {
-        //   log('===> dekho', data);
-        // });
       };
 
-      // log('===> docker request data: ', options);
       const clientRequest = http.request(options, callback);
       clientRequest.end();
     }
-    catch (e) {
-      console.log('===> MAJOR ERROR ALERT', e);
+    catch (error) {
+      saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.DOCKER_FACING, 'Error occured while trying to send docker request', { error }, correlationId);
       reject();
     }
   });
