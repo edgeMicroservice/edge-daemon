@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 const { getRichError } = require('@bananabread/response-helper');
 
 const { requestTypes, identifyRequest } = require('./requestIdentifier');
@@ -17,13 +16,37 @@ const {
   createContainer: mdeployCreateContainer,
   fetchContainers: mdeployFetchContainers,
   deleteContainerById: mdeployDeleteContainerById,
+  createImage: mdeployCreateImage,
 } = require('./requesters/mdeployRequester');
 
-const imageCache = {}; // { nodeId: [ { user, image, tag } ] }
+const adjustContentLength = (dockerResponse) => {
+  if (!dockerResponse.headers['content-length']) return dockerResponse;
+  const updatedResponse = dockerResponse;
+  updatedResponse.headers['content-length'] = updatedResponse.data[0].length;
+  return updatedResponse;
+};
 
-const createImage = (nodeId, formattedRequest, data, correlationId) => dockerRequest(nodeId, formattedRequest, correlationId)
-  .then(() => {
+const createImage = (nodeId, formattedRequest, { user, image, tag }, correlationId) => dockerRequest(nodeId, formattedRequest, correlationId)
+  .then((dockerResponse) => {
+    if (dockerResponse.status.code === 200) return dockerResponse;
 
+    return mdeployCreateImage(nodeId, image, correlationId)
+      .then(() => {
+        const successfulDockerResponse = dockerResponse;
+        successfulDockerResponse.status.code = 200;
+        successfulDockerResponse.status.message = 'OK';
+        delete successfulDockerResponse.headers['content-length'];
+        successfulDockerResponse.headers['transfer-encoding'] = 'chunked';
+        successfulDockerResponse.data = [
+          `{"status":"Pulling from ${user}/${image}","id":"1.0.0"}`,
+          `{"status":"Digest: ${tag}"}`,
+          `{"status":"Pulling from ${user}/${image}","id":"latest"}`,
+          `{"status":"Digest: ${tag}"}`,
+          `{"status":"Status: Image is up to date for ${user}/${image}"}`,
+        ];
+        return successfulDockerResponse;
+      })
+      .catch(() => dockerResponse);
   });
 
 const fetchAllContainers = (nodeId, formattedRequest, correlationId) => dockerRequest(nodeId, formattedRequest, correlationId)
@@ -35,8 +58,9 @@ const fetchAllContainers = (nodeId, formattedRequest, correlationId) => dockerRe
 
       const completeResponse = { ...dockerResponse };
       completeResponse.data = [`${JSON.stringify(allContainers)}\n`];
-      return completeResponse;
-    }));
+      return adjustContentLength(completeResponse);
+    })
+    .catch(() => dockerResponse));
 
 const fetchContainerById = (nodeId, containerId, correlationId) => dockerFetchContainerById(nodeId, containerId, correlationId)
   .then((dockerResponse) => {
@@ -52,17 +76,25 @@ const fetchContainerById = (nodeId, containerId, correlationId) => dockerFetchCo
         const convertedResponse = converContainerResponse(nodeId, foundContainer, correlationId);
         const completeResponse = { ...dockerResponse };
         completeResponse.data = [`${JSON.stringify(convertedResponse)}\n`];
-        return completeResponse;
-      });
+        return adjustContentLength(completeResponse);
+      })
+      .catch(() => dockerResponse);
   });
 
 const createContainer = (
   nodeId,
   formattedRequest,
-  { isGatewayDeployment },
+  {
+    agreementId,
+    name,
+    body,
+    isGatewayDeployment,
+  },
   correlationId,
 ) => {
+  if (isGatewayDeployment) return dockerRequest(nodeId, formattedRequest, correlationId);
 
+  return mdeployCreateContainer(nodeId, agreementId, name, body, correlationId);
 };
 
 const routeRequest = (nodeId, formattedRequest, correlationId) => identifyRequest(nodeId, formattedRequest, correlationId)
@@ -71,20 +103,20 @@ const routeRequest = (nodeId, formattedRequest, correlationId) => identifyReques
     saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.ANAX_FACING, 'Incoming request identified', { identifiedRequest, formattedRequest }, correlationId);
 
     switch (type) {
-      case requestTypes.UNIDENTIFIED:
+      case requestTypes.UNIDENTIFIED: // Docker Only
         return dockerRequest(nodeId, formattedRequest, correlationId);
 
-      case requestTypes.NON_IMAGE_CONTAINER:
-        return dockerRequest(nodeId, formattedRequest, correlationId);
-
-      case requestTypes.FETCH_IMAGE:
+      case requestTypes.NON_IMAGE_CONTAINER: // Docker Only
         return dockerRequest(nodeId, formattedRequest, correlationId);
 
       case requestTypes.CREATE_IMAGE:
+        return createImage(nodeId, formattedRequest, data, correlationId);
+
+      case requestTypes.FETCH_IMAGE: // TODO Update when service image posting mechanism is changed for HZN Exchange
         return dockerRequest(nodeId, formattedRequest, correlationId);
 
       case requestTypes.CREATE_CONTAINER:
-        return dockerRequest(nodeId, formattedRequest, correlationId);
+        return createContainer(nodeId, formattedRequest, data, correlationId);
 
       case requestTypes.START_CONTAINER: // Docker Only
         return dockerRequest(nodeId, formattedRequest, correlationId);
@@ -94,6 +126,7 @@ const routeRequest = (nodeId, formattedRequest, correlationId) => identifyReques
 
       case requestTypes.DELETE_CONTAINER:
         return mdeployDeleteContainerById(nodeId, data.containerId, correlationId)
+          .catch(() => { })
           .then(() => dockerRequest(nodeId, formattedRequest, correlationId));
 
       case requestTypes.FETCH_ALL_CONTAINERS:

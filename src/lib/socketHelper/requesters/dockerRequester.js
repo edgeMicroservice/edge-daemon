@@ -1,7 +1,7 @@
 const http = require('http');
 const Promise = require('bluebird');
 
-const dockerSocketPath = require('../../../configuration/config');
+const { dockerSocketPath } = require('../../../configuration/config');
 const { SERVER_TYPE, LOG_TYPE, saveLog } = require('../../../models/anaxSocketModel');
 
 const DOCKER_ENDPOINTS = {

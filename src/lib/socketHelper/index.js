@@ -16,7 +16,7 @@ const { routeRequest } = require('./requestRouter');
 const {
   formatToJson,
   formatToHttp,
-} = require('./httpJsonConverter');
+} = require('./converters/httpJsonConverter');
 
 const initializeSocket = (nodeId) => {
   const connections = {};

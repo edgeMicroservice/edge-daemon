@@ -10,7 +10,11 @@ const getNodes = (mdeployStatuses, correlationId) => nodeModel.getAllNodes(corre
 
 const getNodeDetails = (nodeId, correlationId) => nodeModel.getNodeById(nodeId, correlationId)
   .then((node) => anaxSocketModel.findAnaxSocketById(nodeId, correlationId)
-    .then((nodeDetails) => ({ ...node, anaxSocketDetails: { ...nodeDetails } })));
+    .then((nodeDetails) => {
+      const responseData = { ...node, anaxSocketDetails: { ...nodeDetails } };
+      responseData.anaxSocketDetails.logs.reverse();
+      return responseData;
+    }));
 
 module.exports = {
   getNodes,

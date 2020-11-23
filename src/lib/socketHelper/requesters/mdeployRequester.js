@@ -50,6 +50,7 @@ const request = (
     })
     .catch((error) => {
       saveLog(nodeId, LOG_TYPE.ERROR, SERVER_TYPE.MDEPLOY_FACING, 'Error response received from mdeploy', { error }, correlationId);
+      throw new Error();
     });
 };
 
