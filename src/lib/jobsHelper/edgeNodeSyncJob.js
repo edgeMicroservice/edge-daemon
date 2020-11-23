@@ -4,22 +4,18 @@ const uuid = require('uuid');
 const { getRichError } = require('@bananabread/response-helper');
 const logger = require('@bananabread/sumologic-winston-logger');
 
-const { saveAndUpdateNode } = require('../../models/nodeModel');
-
 // const { nodeSync } = require('../../configuration/config');
+const { mdeployStatusValues } = require('../../util/nodeUtil');
+const { getCurrentNode } = require('../../external/jsonRPCRequests');
+const { saveAndUpdateNode } = require('../../models/nodeModel');
+const { initializeAnaxNodesForEdgeNodes } = require('../anaxHelper');
+
 const {
   getNodes,
   getClient,
   getClientForExternalNode,
   clientStatusValues,
 } = require('../../external/mdeployRequests');
-const {
-  getCurrentNode,
-} = require('../../external/jsonRPCRequests');
-const { mdeployStatusValues } = require('../../util/nodeUtil');
-const {
-  initializeAnaxNodesForEdgeNodes,
-} = require('../anaxHelper');
 
 const syncNodes = () => {
   const correlationId = uuid.v4();
