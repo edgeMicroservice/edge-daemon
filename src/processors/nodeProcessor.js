@@ -12,7 +12,10 @@ const getNodeDetails = (nodeId, correlationId) => nodeModel.getNodeById(nodeId, 
   .then((node) => anaxSocketModel.findAnaxSocketById(nodeId, correlationId)
     .then((nodeDetails) => {
       const responseData = { ...node, anaxSocketDetails: { ...nodeDetails } };
-      responseData.anaxSocketDetails.logs.reverse();
+      if (responseData.anaxSocketDetails && responseData.anaxSocketDetails.logs) {
+        responseData.anaxSocketDetails.logs = [...responseData.anaxSocketDetails.logs];
+        responseData.anaxSocketDetails.logs.reverse();
+      }
       return responseData;
     }));
 

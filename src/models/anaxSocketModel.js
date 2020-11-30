@@ -3,11 +3,12 @@ const Promise = require('bluebird');
 const logger = require('@bananabread/sumologic-winston-logger');
 const { getRichError } = require('@bananabread/response-helper');
 
-const { development: { logAnaxCommunication } } = require('../configuration/config');
+const {
+  anaxSocketLogsMaxLength,
+  consoleLogAnaxCommunication,
+} = require('../configuration/config');
 
 const anaxSockets = {};
-
-const ANAX_SOCKET_LOGS_MAX_LENGTH = 50;
 
 const LOG_TYPE = {
   ERROR: 'error',
@@ -51,10 +52,10 @@ const saveLog = (nodeId, level, serverType, message, metadata, correlationId) =>
     return saveAnaxSocket(nodeId, { logs: [] }, correlationId);
   })
   .then((anaxSocket) => {
-    if (anaxSocket.logs.length > ANAX_SOCKET_LOGS_MAX_LENGTH - 1) anaxSocket.logs.shift();
+    if (anaxSocket.logs.length > anaxSocketLogsMaxLength - 1) anaxSocket.logs.shift();
     const logMessage = `${serverType}: ${message}`;
 
-    if (logAnaxCommunication) {
+    if (consoleLogAnaxCommunication) {
       let loggerMetdata = { correlationId };
       if (metadata) loggerMetdata = { ...loggerMetdata, ...metadata };
 

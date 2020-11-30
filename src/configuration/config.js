@@ -52,6 +52,8 @@ module.exports = (() => {
         anaxContainersPortNumEnd: parseInt(process.env.HZN_ANAX_CONTAINERS_PORT_NUM_END, 10) || 8299,
         essObjectTypes: process.env.HZN_ESS_OBJECT_TYPES,
         gatewayDeploymentContainerEnv: process.env.HZN_GATEWAY_DEPLOYMENT_CONTAINER_ENV || 'HZN_DEPLOYMENT_LOCATION=gatewayNode',
+        anaxSocketLogsMaxLength: parseInt(process.env.HZN_ANAX_SOCKET_LOGS_MAX_LENGTH, 10) || 50,
+        consoleLogAnaxCommunication: process.env.HZN_CONSOLE_LOG_ANAX_COMMUNICATION === 'yes',
       },
       edgeEngine: {
         url: edgeEngineUrl,
@@ -59,10 +61,6 @@ module.exports = (() => {
         mdeployEndpoint: edgeEngineMdeployEndpoint,
       },
       dockerSocketPath: process.env.DOCKER_SOCKET_PATH || '/var/run/docker.sock',
-      development: {
-        deployServicesOnDocker: process.env.DEVELOPMENT_DEPLOY_SERVICES_ON_DOCKER === 'yes',
-        logAnaxCommunication: process.env.LOG_ANAX_COMMUNICATION === 'yes',
-      },
     },
   });
 

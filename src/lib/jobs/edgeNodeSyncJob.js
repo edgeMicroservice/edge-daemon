@@ -1,24 +1,70 @@
 const Promise = require('bluebird');
-const uuid = require('uuid');
 
 const { getRichError } = require('@bananabread/response-helper');
 const logger = require('@bananabread/sumologic-winston-logger');
+const { getCorrelationId } = require('@bananabread/request-helper');
 
 // const { nodeSync } = require('../../configuration/config');
 const { mdeployStatusValues } = require('../../util/nodeUtil');
 const { getCurrentNode } = require('../../external/jsonRPCRequests');
-const { saveAndUpdateNode } = require('../../models/nodeModel');
-const { initializeAnaxNodesForEdgeNodes } = require('../anaxHelper');
 
 const {
+  initializeAnaxNodeForEdgeNode,
+  terminateAnaxNodeForEdgeNode,
+} = require('../anaxHelper');
+
+const {
+  findNodeById,
+  saveAndUpdateNode,
+} = require('../../models/nodeModel');
+
+const {
+  clientStatusValues,
   getNodes,
   getClient,
   getClientForExternalNode,
-  clientStatusValues,
 } = require('../../external/mdeployRequests');
 
+const nodesToBeTerminated = {};
+
+const processNode = (discoveredNode, correlationId) => {
+  if (discoveredNode.isGatewayNode) return Promise.resolve();
+
+  const saveAndInitialize = () => saveAndUpdateNode(discoveredNode, correlationId)
+    .then(() => initializeAnaxNodeForEdgeNode(discoveredNode, correlationId))
+    .catch((error) => error);
+
+  return findNodeById(discoveredNode.id)
+    .then((persistedNode) => {
+      if (!persistedNode) return saveAndInitialize();
+
+      if (persistedNode.mdeployStatus === discoveredNode.mdeployStatus) return undefined;
+
+      if (persistedNode.mdeployStatus !== mdeployStatusValues.ACTIVE
+        && discoveredNode.mdeployStatus === mdeployStatusValues.ACTIVE) {
+        return saveAndInitialize();
+      }
+
+      if (persistedNode.mdeployStatus === mdeployStatusValues.ACTIVE
+        && discoveredNode.mdeployStatus !== mdeployStatusValues.ACTIVE) {
+        if (!nodesToBeTerminated[discoveredNode.id]) {
+          nodesToBeTerminated[discoveredNode.id] = true;
+          return undefined;
+        }
+
+        return saveAndUpdateNode(discoveredNode, correlationId)
+          .then(() => terminateAnaxNodeForEdgeNode(persistedNode))
+          .then(() => {
+            delete nodesToBeTerminated[discoveredNode.id];
+          });
+      }
+
+      return saveAndUpdateNode(discoveredNode, correlationId);
+    });
+};
+
 const syncNodes = () => {
-  const correlationId = uuid.v4();
+  const correlationId = getCorrelationId();
   logger.debug('Starting edgeNodeSyncJob', { correlationId });
   return getCurrentNode()
     .then((gatewayNode) => getNodes(correlationId)
@@ -48,7 +94,6 @@ const syncNodes = () => {
                   }
                 }
                 else {
-                  logger.debug(`Setting node mdeployState to: ${mdeployStatusValues.NOT_FOUND}`, { nodeId: foundNode.id, correlationId, response });
                   node.mdeployStatus = mdeployStatusValues.NOT_FOUND;
                 }
               }
@@ -56,22 +101,14 @@ const syncNodes = () => {
             nodes.push(node);
           });
           return nodes;
-        })
-        .then((nodes) => Promise.map(nodes, (node) => saveAndUpdateNode(node)
-          .catch((error) => ({
-            error,
-          }))))
-        .then((results) => {
-          initializeAnaxNodesForEdgeNodes();
-          const errorsFound = results.some((result) => result.error !== undefined);
-          if (errorsFound) throw new Error();
-        }))
-      .then(() => {
-        logger.debug('Completed edgeNodeSyncJob', { correlationId });
-      })
-      .catch(() => {
-        logger.debug('Completed edgeNodeSyncJob with errors', { correlationId });
-      }));
+        })))
+    .then((nodes) => Promise.mapSeries(nodes, (node) => processNode(node)))
+    .then((errorResponses) => {
+      const errors = errorResponses.filter((resp) => resp !== undefined);
+
+      if (errors.length > 0) logger.debug('Completed edgeNodeSyncJob with errors', { errors, correlationId });
+      else logger.debug('Completed edgeNodeSyncJob', { correlationId });
+    });
 };
 
 const start = () => getClient()

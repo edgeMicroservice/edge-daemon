@@ -6,6 +6,7 @@ const mdeployStatusValues = {
 
 const anaxStatusValues = {
   CONFIGURED: 'configured',
+  UNCONFIGURED: 'unconfigured',
 };
 
 const gatewayNodeIds = {

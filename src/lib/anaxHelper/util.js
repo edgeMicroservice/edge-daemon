@@ -4,6 +4,7 @@ const scriptFileValues = {
 
 const scriptCommandValues = {
   REGISTER_ANAX: 'hzn register',
+  UNREGISTER_ANAX: 'echo "y" | hzn unregister',
   NUKE_DOCKER: 'docker rm -f $(docker ps -a -q)',
 };
 

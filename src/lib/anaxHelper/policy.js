@@ -8,22 +8,20 @@ const {
   },
 } = require('../../configuration/config');
 
-const createPolicyFile = (nodeId, properties = [], constraints = [], correlationId) => {
-  console.log('===> nodePoliciesDir', nodePoliciesDir);
+const getPolicyFilePath = (nodeId) => `${nodePoliciesDir}/policy_${nodeId}.json`;
 
-  const filePath = `${nodePoliciesDir}/policy_${nodeId}.json`;
+const createPolicyFile = (nodeId, properties = [], constraints = [], correlationId) => {
+  const filePath = getPolicyFilePath(nodeId);
+
   return fs.ensureDir(nodePoliciesDir)
     .then(() => fs.writeJSON(filePath, { properties, constraints })
-      .then((savedFile) => {
-        console.log('===> savedFile', savedFile);
-        return filePath;
-      })
+      .then(() => filePath)
       .catch((error) => {
-        console.log('===> Error occured while writing policy file', error);
         throw getRichError(
           'System', 'Error occured while writing policy file',
           {
             nodeId,
+            filePath,
             properties,
             constraints,
             error,
@@ -33,6 +31,24 @@ const createPolicyFile = (nodeId, properties = [], constraints = [], correlation
       }));
 };
 
+const removePolicyFile = (nodeId, correlationId) => {
+  const filePath = getPolicyFilePath(nodeId);
+
+  return fs.remove(filePath)
+    .catch((error) => {
+      throw getRichError(
+        'System', 'Error occured while writing policy file',
+        {
+          nodeId,
+          filePath,
+          error,
+        },
+        null, 'error', correlationId,
+      );
+    });
+};
+
 module.exports = {
   createPolicyFile,
+  removePolicyFile,
 };
