@@ -29,7 +29,7 @@ const findNodeById = (id) => Promise.resolve(nodes[id]);
 const getNodeById = (id, correlationId) => findNodeById(id)
   .then((node) => {
     if (node) return node;
-    throw getRichError('NotFound', 'Could not get node', { id }, null, 'error', correlationId);
+    throw getRichError('NotFound', 'Could not get node in nodeModel', { id }, null, 'error', correlationId);
   });
 
 const deleteNodeById = (id) => Promise.resolve()

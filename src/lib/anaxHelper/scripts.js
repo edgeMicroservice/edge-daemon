@@ -152,10 +152,15 @@ const deployAnaxNode = (nodeId, nodePort, dockerSocketFilePath, correlationId) =
     correlationId,
   ];
 
-  return updateHznCliConfig(nodeId, correlationId)
-    .then(() => undeployAnaxNode(nodeId, nodePort, correlationId))
-    .catch(() => { })
-    .then(() => runScriptFile(...scriptArgs))
+  return undeployAnaxNode(nodeId, nodePort, correlationId)
+    .catch(() => {
+      console.log('===> catch 1');
+    })
+    .then(() => updateHznCliConfig(nodeId, correlationId))
+    .then(() => {
+      console.log('===> here 1');
+      return runScriptFile(...scriptArgs);
+    })
     .catch((error) => {
       throw getRichError('System', 'Error occured while deploying anax container', { nodeId, nodePort, error }, null, 'error', correlationId);
     })

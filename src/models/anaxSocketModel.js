@@ -76,7 +76,7 @@ const saveLog = (nodeId, level, serverType, message, metadata, correlationId) =>
 const getAnaxSocketById = (id, correlationId) => findAnaxSocketById(id)
   .then((node) => {
     if (node) return node;
-    throw getRichError('System', 'Could not get node', { id }, null, 'error', correlationId);
+    throw getRichError('System', 'Could not get node in anaxSocketModel', { id }, null, 'error', correlationId);
   });
 
 const deleteAnaxSocketById = (id) => Promise.resolve()

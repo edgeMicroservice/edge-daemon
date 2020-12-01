@@ -13,14 +13,6 @@ const {
 } = require('../../configuration/config');
 
 const {
-  purgeDocker,
-  deployAnaxNode,
-  undeployAnaxNode,
-  registerAnaxNode,
-  unregisterAnaxNode,
-} = require('./scripts');
-
-const {
   gatewayNodeIds,
   gatewayNodeIdsPortsMap,
   mdeployStatusValues,
@@ -32,12 +24,20 @@ const {
   removePolicyFile,
 } = require('./policy');
 
+const {
+  purgeDocker,
+  deployAnaxNode,
+  undeployAnaxNode,
+  registerAnaxNode,
+  unregisterAnaxNode,
+} = require('./scripts');
+
 const timeoutBWAnaxInitializationAndRegisteration = 4000; // 4 seconds in ms
 const timeoutBWAnaxUnregisterationAndTermination = 4000; // 4 seconds in ms
 
 const deployRequests = {};
 
-const deployAndRegisterAnaxNode = (nodeId, nodePort, nodeProperties, customdockerSocketPath, correlationId) => {
+const deployAndRegisterAnaxNode = (nodeId, nodePort, nodeProperties, customDockerSocketPath, isEdgeNode, correlationId) => {
   if (deployRequests[nodeId]) {
     return Promise.resolve();
   }
@@ -46,14 +46,20 @@ const deployAndRegisterAnaxNode = (nodeId, nodePort, nodeProperties, customdocke
   const shortenedNodeId = nodeId.substr(0, 16); // Anax does not support large nodeIds, left some space for flags
 
   return createPolicyFile(nodeId, nodeProperties)
-    .then((policyFilePath) => deployAnaxNode(shortenedNodeId, nodePort, customdockerSocketPath, correlationId)
+    .then((policyFilePath) => deployAnaxNode(shortenedNodeId, nodePort, customDockerSocketPath, correlationId)
       .delay(timeoutBWAnaxInitializationAndRegisteration)
       .then(() => registerAnaxNode(shortenedNodeId, nodePort, policyFilePath, correlationId)
-        .catch((error) => updateAnaxState(nodeId, { status: anaxStatusValues.UNCONFIGURED, nodePort })
-          .then(() => {
-            throw error;
-          })))
-      .then(() => updateAnaxState(nodeId, { status: anaxStatusValues.CONFIGURED, nodePort })))
+        .catch((error) => {
+          if (!isEdgeNode) throw error;
+          return updateAnaxState(nodeId, { status: anaxStatusValues.UNCONFIGURED, nodePort })
+            .then(() => {
+              throw error;
+            });
+        }))
+      .then(() => {
+        if (!isEdgeNode) return undefined;
+        return updateAnaxState(nodeId, { status: anaxStatusValues.CONFIGURED, nodePort });
+      }))
     .finally(() => {
       delete deployRequests[nodeId];
       return removePolicyFile(nodeId, correlationId);
@@ -85,7 +91,7 @@ const initializeAnaxNodeForEdgeNode = (node, correlationId) => {
 
   return getPort({ port: getPort.makeRange(anaxContainersPortNumStart, anaxContainersPortNumEnd) })
     .then((availableNodePort) => initializeSocket(node.id)
-      .then((customdockerSocketPath) => deployAndRegisterAnaxNode(node.id, availableNodePort, nodeProperties, customdockerSocketPath, correlationId)));
+      .then((customDockerSocketPath) => deployAndRegisterAnaxNode(node.id, availableNodePort, nodeProperties, customDockerSocketPath, true, correlationId)));
 };
 
 const terminateAnaxNodeForEdgeNode = (node, correlationId) => {
