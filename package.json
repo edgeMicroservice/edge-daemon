@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "swaggerFile": {
     "version": "1.0.0",
-    "account": "mimik"
+    "account": "mimik",
+    "name": "edgedaemon"
   },
-  "type": "edgedaemon",
+  "mimik": {
+    "type": "edgedaemon"
+  },
   "description": "The purpose of this service is to deploy edge services by fetching from a url and posting on edgeSDK.",
   "main": "./src/index.js",
   "scripts": {
