@@ -1,29 +1,22 @@
 <a name="config"></a>
 
 ## config() ⇒ <code>object</code>
-The following environment variables are needed to configure H2Feeds:
+The following environment variables are needed to configure edgedaemon:
 
 | Env variable name | Description | Default | Comments |
 | ----------------- | ----------- | ------- | -------- |
-| TABLE_NAME_FEED | Table for H2Feeds service | Feed | on dynamodb
-| TABLE_NAME_FEED_RESPONSE | Table for H2Feeds service | FeedResponse | on dynamodb
-| TABLE_NAME_FEED_USER | Table for H2Feeds service | FeedUser | on dynamodb
-| OAUTH_IMPLICIT_AUDIENCE | audience of the service for token validation | |
-| OAUTH_IMPLICIT_KEY | key to verify user token | |
-| OAUTH_IMPLICIT_ISSUER | issuer of user token (mID) | |
-| TOPIC_NAME | Topic name to subscribe to for sending events |
-| MPO_URL | mPO url to get user profile references | |
-| MPO_AUDIENCE | mPO audience | |
-| MSHADOWFEED_SET | set to `on` if shadow feed service is available | `off` |
-| MSHADOWFEED_AUDIENCE | mShadowFeed service audience | |
+| EDGE_ENGINE_URL | Url for the edgeEngine (gateway) | http://localhost:8083 |
+| EDGE_ENGINE_PROJECT_ID | mimik developer project id | | should be same for mdeploy
+| EDGE_ENGINE_MDEPLOY_ENDPOINT | mdeploy endpoint | /mdeploy/v1 |
+| SOCKETS_DIR | Directory to store/create unix sockets in | /var/tmp/oh/sockets |
+| DOCKER_SOCKET_PATH | Path to the docker daemon socket | /var/run/docker.sock |
+| SOCKET_LOGS_MAX_TOTAL | Maximum number of total socket communication logs persisted and served using api per node socket | 100 | logs are kept by newest (older gets deleted if max total number is hit)
+| CONSOLE_LOG_SOCKET_COMMUNICATION | Whether to have socket communincation logs logged in the service console  | no | to enable set to: yes
+| DOCKER_DEPLOYMENT_CONTAINER_ENV | Env var to add to docker container during deployment to set deployment location as docker instead of mdeploy | HZN_DEPLOYMENT_LOCATION=gatewayNode |
 
 These values are on top of what is needed in the [configuration](https://bitbucket.org/mimiktech/configuration) library.
 
-The api is in [swaggerhub](https://app.swaggerhub.com/apis/mimik/H2Feeds)
-
-* `Feed`: contains the feed created by system
-* `FeedResponse`: contains the responses to feeds by the user associated
-* `FeedUser`: contains the user feed profile
+The api is in [swaggerhub](https://app.swaggerhub.com/apis/mimik/edgedaemon)
 
 **Kind**: global function  
 **Returns**: <code>object</code> - configuration - Server configuration.  
