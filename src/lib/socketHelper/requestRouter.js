@@ -1,7 +1,7 @@
 const { getRichError } = require('@bananabread/response-helper');
 
 const { requestTypes, identifyRequest } = require('./requestIdentifier');
-const { SERVER_TYPE, LOG_TYPE, saveLog } = require('../../models/anaxSocketModel');
+const { SERVER_TYPE, LOG_TYPE, saveLog } = require('../../models/nodeDetailsModel');
 
 const {
   converContainerResponse,
@@ -100,7 +100,7 @@ const createContainer = (
 const routeRequest = (nodeId, formattedRequest, correlationId) => identifyRequest(nodeId, formattedRequest, correlationId)
   .then((identifiedRequest) => {
     const { type, data } = identifiedRequest;
-    saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.ANAX_FACING, 'Incoming request identified', { identifiedRequest, formattedRequest }, correlationId);
+    saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.EDGEDAEMON_FACING, 'Incoming request identified', { identifiedRequest, formattedRequest }, correlationId);
 
     switch (type) {
       case requestTypes.UNIDENTIFIED: // Docker Only

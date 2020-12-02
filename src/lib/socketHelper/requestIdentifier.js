@@ -3,11 +3,7 @@ const querystring = require('querystring');
 
 const { getRichError } = require('@bananabread/response-helper');
 
-const {
-  hzn: {
-    gatewayDeploymentContainerEnv,
-  },
-} = require('../../configuration/config');
+const { dockerDeploymentContainerEnv } = require('../../configuration/config');
 
 const requestTypes = {
   NON_IMAGE_CONTAINER: 'non_image_container',
@@ -79,7 +75,7 @@ const identifyRequest = (nodeId, request, correlationId) => {
           let isGatewayDeployment = false;
 
           if (parsedBody.Env && Array.isArray(parsedBody.Env) && parsedBody.Env.length > 0) {
-            isGatewayDeployment = parsedBody.Env.some((env) => env === gatewayDeploymentContainerEnv);
+            isGatewayDeployment = parsedBody.Env.some((env) => env === dockerDeploymentContainerEnv);
           }
 
           return Promise.resolve({

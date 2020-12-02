@@ -1,25 +1,42 @@
 const nodeModel = require('../models/nodeModel');
-const anaxSocketModel = require('../models/anaxSocketModel');
+const nodeDetailsModel = require('../models/nodeDetailsModel');
 
-const getNodes = (mdeployStatuses, correlationId) => nodeModel.getAllNodes(correlationId)
-  .then((nodes) => {
-    if (!mdeployStatuses) return nodes;
+const {
+  initializeSocket,
+  terminateSocket,
+} = require('../lib/socketHelper');
 
-    return nodes.filter((node) => mdeployStatuses.includes(node.mdeployStatus));
-  });
+const createNode = (newNode, correlationId) => {
+  const node = newNode;
 
-const getNodeDetails = (nodeId, correlationId) => nodeModel.getNodeById(nodeId, correlationId)
-  .then((node) => anaxSocketModel.findAnaxSocketById(nodeId, correlationId)
+  return initializeSocket(node.id, correlationId)
+    .then((edgeSocketPath) => {
+      node.edgeSocketPath = edgeSocketPath;
+      return nodeModel.saveNode(node, correlationId);
+    });
+};
+
+const getNodes = (correlationId) => nodeModel.getAllNodes(correlationId);
+
+const getNodeDetails = (id, correlationId) => nodeModel.getNodeById(id, correlationId)
+  .then((node) => nodeDetailsModel.findEdgeSocketById(id, correlationId)
     .then((nodeDetails) => {
-      const responseData = { ...node, anaxSocketDetails: { ...nodeDetails } };
-      if (responseData.anaxSocketDetails && responseData.anaxSocketDetails.logs) {
-        responseData.anaxSocketDetails.logs = [...responseData.anaxSocketDetails.logs];
-        responseData.anaxSocketDetails.logs.reverse();
+      const responseData = { ...node, ...nodeDetails };
+      if (responseData.logs) {
+        responseData.logs = [...responseData.logs];
+        responseData.logs.reverse();
       }
       return responseData;
     }));
 
+const deleteNode = (id, correlationId) => terminateSocket(id, correlationId)
+  .then(() => nodeModel.deleteNodeById(id, correlationId))
+  .then(() => nodeDetailsModel.deleteEdgeSocketById())
+  .then(() => ({ id }));
+
 module.exports = {
+  createNode,
   getNodes,
   getNodeDetails,
+  deleteNode,
 };

@@ -11,8 +11,14 @@ const pack = require('../../package.json');
  *
  * | Env variable name | Description | Default | Comments |
  * | ----------------- | ----------- | ------- | -------- |
- * | NODE_SYNC_JOB_INTERVAL | Interval to check for updates in edge nodes | 5 | in seconds
- * | EDGE_ENGINE_URL | edgeEngine url | http://localhost:8083 |
+ * | EDGE_ENGINE_URL | Url for the edgeEngine (gateway) | http://localhost:8083 |
+ * | EDGE_ENGINE_PROJECT_ID | mimik developer project id | | should be same for mdeploy
+ * | EDGE_ENGINE_MDEPLOY_ENDPOINT | mdeploy endpoint | /mdeploy/v1 |
+ * | SOCKETS_DIR | Directory to store/create unix sockets in | /var/tmp/oh/sockets |
+ * | DOCKER_SOCKET_PATH | Path to the docker daemon socket | /var/run/docker.sock |
+ * | SOCKET_LOGS_MAX_TOTAL | Maximum number of total socket communication logs persisted and served using api per node socket | 100 | logs are kept by newest (older gets deleted if max total number is hit)
+ * | CONSOLE_LOG_SOCKET_COMMUNICATION | Whether to have socket communincation logs logged in the service console  | no | to enable set to: yes
+ * | DOCKER_DEPLOYMENT_CONTAINER_ENV | Env var to add to docker container during deployment to set deployment location as docker instead of mdeploy | HZN_DEPLOYMENT_LOCATION=gatewayNode |
  *
  * These values are on top of what is needed in the [configuration](https://bitbucket.org/mimiktech/configuration) library.
  *
@@ -32,35 +38,16 @@ module.exports = (() => {
       },
     },
     custom: {
-      nodeSync: {
-        jobInterval: parseInt(process.env.NODE_SYNC_JOB_INTERVAL, 10) || 60, // in seconds
-      },
-      gatewaySync: {
-        jobInterval: parseInt(process.env.NODE_SYNC_JOB_INTERVAL, 10) || 120,
-      },
-      hzn: {
-        exchangeUrl: process.env.HZN_EXCHANGE_URL,
-        cssUrl: process.env.HZN_CSS_URL,
-        exchangeUserAuth: process.env.HZN_EXCHANGE_USER_AUTH,
-        orgId: process.env.HZN_ORG_ID || 'myorg',
-        defaultNodeToken: process.env.HZN_DEFAULT_NODE_TOKEN || 'nodeToken',
-        nodePoliciesDir: process.env.HZN_POLICIES_DIR || '/var/tmp/oh/policies',
-        nodeSocketsDir: process.env.HZN_SOCKETS_DIR || '/var/tmp/oh/sockets',
-        anaxStorageBasePath: process.env.HZN_ANAX_STORAGE_BASE_PATH || '/var/tmp/oh/storage',
-        cliConfigFile: process.env.HZN_CLI_CONFIG_FILE || '/etc/default/horizon',
-        anaxContainersPortNumStart: parseInt(process.env.HZN_ANAX_CONTAINERS_PORT_NUM_START, 10) || 8200,
-        anaxContainersPortNumEnd: parseInt(process.env.HZN_ANAX_CONTAINERS_PORT_NUM_END, 10) || 8299,
-        essObjectTypes: process.env.HZN_ESS_OBJECT_TYPES,
-        gatewayDeploymentContainerEnv: process.env.HZN_GATEWAY_DEPLOYMENT_CONTAINER_ENV || 'HZN_DEPLOYMENT_LOCATION=gatewayNode',
-        anaxSocketLogsMaxLength: parseInt(process.env.HZN_ANAX_SOCKET_LOGS_MAX_LENGTH, 10) || 50,
-        consoleLogAnaxCommunication: process.env.HZN_CONSOLE_LOG_ANAX_COMMUNICATION === 'yes',
-      },
       edgeEngine: {
         url: edgeEngineUrl,
         projectId: edgeEngineProjectId,
         mdeployEndpoint: edgeEngineMdeployEndpoint,
       },
+      socketsDir: process.env.SOCKETS_DIR || '/var/tmp/oh/sockets',
       dockerSocketPath: process.env.DOCKER_SOCKET_PATH || '/var/run/docker.sock',
+      socketLogsMaxTotal: parseInt(process.env.SOCKET_LOGS_MAX_TOTAL, 10) || 100,
+      consoleLogSocketCommunication: process.env.CONSOLE_LOG_SOCKET_COMMUNICATION === 'yes',
+      dockerDeploymentContainerEnv: process.env.DOCKER_DEPLOYMENT_CONTAINER_ENV || 'HZN_DEPLOYMENT_LOCATION=gatewayNode',
     },
   });
 

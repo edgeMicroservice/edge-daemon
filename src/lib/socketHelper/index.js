@@ -1,15 +1,12 @@
+const Promise = require('bluebird');
 const net = require('net');
 const fs = require('fs-extra');
 
 const { getCorrelationId } = require('@bananabread/request-helper');
 
-const {
-  hzn: {
-    nodeSocketsDir,
-  },
-} = require('../../configuration/config');
+const { socketsDir } = require('../../configuration/config');
 
-const { SERVER_TYPE, LOG_TYPE, saveLog } = require('../../models/anaxSocketModel');
+const { SERVER_TYPE, LOG_TYPE, saveLog } = require('../../models/nodeDetailsModel');
 
 const { routeRequest } = require('./requestRouter');
 
@@ -18,42 +15,43 @@ const {
   formatToHttp,
 } = require('./converters/httpJsonConverter');
 
-const initializeSocket = (nodeId) => {
-  const connections = {};
-  let SHUTDOWN = false;
-  const SOCKET_FILE = `${nodeSocketsDir}/edgeDaemon_${nodeId}.sock`;
+const servers = {};
+const streams = {};
+let SHUTDOWN = false;
+
+const initializeSocket = (nodeId, correlationId) => {
+  const SOCKET_FILE = `${socketsDir}/edgeDaemon_${nodeId}.sock`;
   let server;
 
-  saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.ANAX_FACING, 'Loading interprocess communications');
+  saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.EDGEDAEMON_FACING, 'Loading interprocess communications', undefined, correlationId);
 
   function createServer(socket) {
-    saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.ANAX_FACING, 'Creating server');
+    saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.EDGEDAEMON_FACING, 'Creating server', undefined, correlationId);
     server = net.createServer((stream) => {
-      const correlationId = getCorrelationId();
-      saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.ANAX_FACING, 'Incoming connection acknowledged', undefined, correlationId);
+      const requestCorrelationId = getCorrelationId();
+      saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.EDGEDAEMON_FACING, 'Incoming connection acknowledged', undefined, requestCorrelationId);
 
-      const self = Date.now();
-      connections[self] = (stream);
+      streams[nodeId] = (stream);
 
       stream.on('end', () => {
-        saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.ANAX_FACING, 'Incoming client disconnected', undefined, correlationId);
-        delete connections[self];
+        saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.EDGEDAEMON_FACING, 'Incoming client disconnected', undefined, requestCorrelationId);
+        delete streams[nodeId];
       });
 
       stream.on('error', (error) => {
-        saveLog(nodeId, LOG_TYPE.ERROR, SERVER_TYPE.ANAX_FACING, 'Error occured on incoming socket', { error }, correlationId);
+        saveLog(nodeId, LOG_TYPE.ERROR, SERVER_TYPE.EDGEDAEMON_FACING, 'Error occured on incoming socket', { error }, requestCorrelationId);
       });
 
       stream.on('data', (msg) => {
         const msgStr = msg.toString();
 
         const formattedRequest = formatToJson(msgStr);
-        routeRequest(nodeId, formattedRequest, correlationId)
+        routeRequest(nodeId, formattedRequest, requestCorrelationId)
           .then((response) => {
             try {
               stream.setEncoding('utf8');
               saveLog(
-                nodeId, LOG_TYPE.INFO, SERVER_TYPE.ANAX_FACING, 'Sending response from docker socket', { response }, correlationId,
+                nodeId, LOG_TYPE.INFO, SERVER_TYPE.EDGEDAEMON_FACING, 'Sending response from docker socket', { response }, requestCorrelationId,
               );
 
               const { status, headers, data: responseData } = response;
@@ -80,13 +78,13 @@ const initializeSocket = (nodeId) => {
             }
             catch (error) {
               saveLog(
-                nodeId, LOG_TYPE.ERROR, SERVER_TYPE.ANAX_FACING, 'Error occured while writing data to stream', { error }, correlationId,
+                nodeId, LOG_TYPE.ERROR, SERVER_TYPE.EDGEDAEMON_FACING, 'Error occured while writing data to stream', { error }, requestCorrelationId,
               );
             }
           })
           .catch((error) => {
             saveLog(
-              nodeId, LOG_TYPE.ERROR, SERVER_TYPE.ANAX_FACING, 'Error received from docker request server', { error }, correlationId,
+              nodeId, LOG_TYPE.ERROR, SERVER_TYPE.EDGEDAEMON_FACING, 'Error received from docker request server', { error }, requestCorrelationId,
             );
             stream.end();
           });
@@ -94,43 +92,67 @@ const initializeSocket = (nodeId) => {
     })
       .listen(socket)
       .on('connection', () => { });
-
     return server;
   }
 
-  saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.ANAX_FACING, 'Checking for left over server');
+  saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.EDGEDAEMON_FACING, 'Checking for left over server');
 
-  function cleanup() {
-    if (!SHUTDOWN) {
-      SHUTDOWN = true;
-      saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.ANAX_FACING, 'Terminating server');
-      if (Object.keys(connections).length) {
-        const clients = Object.keys(connections);
-        while (clients.length) {
-          const client = clients.pop();
-          connections[client].end();
-        }
-      }
-      server.close();
-      process.exit(0);
-    }
-  }
-  process.on('SIGINT', cleanup);
-
-  return fs.ensureDir(nodeSocketsDir)
+  return fs.ensureDir(socketsDir)
     .then(() => fs.stat(SOCKET_FILE)
       .then(() => fs.unlink(SOCKET_FILE)
         .catch((error) => {
-          saveLog(nodeId, LOG_TYPE.ERROR, SERVER_TYPE.ANAX_FACING, 'Error occured while removing old socket file', { error });
+          saveLog(nodeId, LOG_TYPE.ERROR, SERVER_TYPE.EDGEDAEMON_FACING, 'Error occured while removing old socket file', { error });
         }))
       .catch(() => { })
       .then(() => {
         server = createServer(SOCKET_FILE);
+        servers[nodeId] = server;
         fs.chmodSync(SOCKET_FILE, 777);
       }))
     .then(() => SOCKET_FILE);
 };
 
+const terminateSocket = (nodeId, correlationId) => {
+  if (streams[nodeId]) {
+    saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.EDGEDAEMON_FACING, 'Terminating stream', undefined, correlationId);
+    try {
+      streams[nodeId].end();
+    }
+    catch (error) {
+      saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.EDGEDAEMON_FACING, 'Error occured while terminating stream', { error }, correlationId);
+    }
+  }
+  if (servers[nodeId]) {
+    saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.EDGEDAEMON_FACING, 'Terminating server', undefined, correlationId);
+    try {
+      servers[nodeId].close();
+    }
+    catch (error) {
+      saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.EDGEDAEMON_FACING, 'Error occured while terminating server', { error }, correlationId);
+    }
+  }
+
+  return Promise.resolve();
+};
+
+function cleanup() {
+  if (!SHUTDOWN) {
+    SHUTDOWN = true;
+
+    const nodeIds = Object.keys(servers);
+
+    Promise.map(nodeIds, (nodeId) => {
+      saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.EDGEDAEMON_FACING, 'Received shutdown request');
+      terminateSocket(nodeId);
+    })
+      .then(() => {
+        process.exit(0);
+      });
+  }
+}
+process.on('SIGINT', cleanup);
+
 module.exports = {
   initializeSocket,
+  terminateSocket,
 };

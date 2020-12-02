@@ -6,7 +6,13 @@ const nodes = {};
 const checkIfValidNode = (node, correlationId) => Promise.resolve()
   .then(() => {
     if (!node || !node.id) {
-      throw getRichError('System', 'Invalid node', { node }, null, 'error', correlationId);
+      throw getRichError('System', 'Invalid node: id not found', { node }, null, 'error', correlationId);
+    }
+    if (!node.dockerSocketPath) {
+      throw getRichError('System', 'Invalid node: dockerSocketPath not found', { node }, null, 'error', correlationId);
+    }
+    if (!node.edgeSocketPath) {
+      throw getRichError('System', 'Invalid node: edgeSocketPath not found', { node }, null, 'error', correlationId);
     }
   });
 
@@ -16,7 +22,7 @@ const saveNode = (node, correlationId) => checkIfValidNode(node, correlationId)
   })
   .then(() => {
     if (nodes[node.id]) {
-      throw getRichError('System', 'Could not save node, node already exists', { node }, null, 'error', correlationId);
+      throw getRichError('Conflict', 'Could not save node, node already exists', { node }, null, 'error', correlationId);
     }
     nodes[node.id] = node;
     return node;
@@ -37,31 +43,10 @@ const deleteNodeById = (id) => Promise.resolve()
     delete nodes[id];
   });
 
-const saveAndUpdateNode = (newNode, correlationId) => checkIfValidNode(newNode, correlationId)
-  .catch((err) => {
-    throw getRichError('System', 'Could not saveAndUpdateNode node, invalid format', { newNode }, err, 'error', correlationId);
-  })
-  .then(() => {
-    if (!nodes[newNode.id]) {
-      nodes[newNode.id] = newNode;
-      return newNode;
-    }
-    const updatedNode = { ...nodes[newNode.id], ...newNode };
-    nodes[newNode.id] = updatedNode;
-    return nodes[newNode.id];
-  });
-
-const updateAnaxState = (nodeId, anaxState) => getNodeById(nodeId)
-  .then(() => {
-    nodes[nodeId].anaxState = anaxState;
-  });
-
 module.exports = {
   saveNode,
   getAllNodes,
   getNodeById,
   findNodeById,
   deleteNodeById,
-  updateAnaxState,
-  saveAndUpdateNode,
 };

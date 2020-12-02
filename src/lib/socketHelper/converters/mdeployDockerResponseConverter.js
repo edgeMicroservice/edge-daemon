@@ -1,4 +1,4 @@
-const { SERVER_TYPE, LOG_TYPE, saveLog } = require('../../../models/anaxSocketModel');
+const { SERVER_TYPE, LOG_TYPE, saveLog } = require('../../../models/nodeDetailsModel');
 
 const converContainerResponse = (nodeId, containerResponse, correlationId) => {
   const convertedResponse = {
@@ -121,7 +121,7 @@ const converContainerResponse = (nodeId, containerResponse, correlationId) => {
     saveLog(
       nodeId,
       LOG_TYPE.INFO,
-      SERVER_TYPE.ANAX_FACING,
+      SERVER_TYPE.EDGEDAEMON_FACING,
       'Error occured while converting mdeploy response to docker response',
       { containerResponse, convertedResponse, error },
       correlationId,

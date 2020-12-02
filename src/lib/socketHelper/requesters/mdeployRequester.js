@@ -2,7 +2,7 @@ const rp = require('request-promise');
 
 const config = require('../../../configuration/config');
 const { getCurrentNode } = require('../../../external/jsonRPCRequests');
-const { SERVER_TYPE, LOG_TYPE, saveLog } = require('../../../models/anaxSocketModel');
+const { SERVER_TYPE, LOG_TYPE, saveLog } = require('../../../models/nodeDetailsModel');
 
 const mdeployUrl = config.dependencies.MDEPLOY.url;
 const { projectId } = config.edgeEngine;
