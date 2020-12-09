@@ -1,3 +1,5 @@
+const { getRichError } = require('@bananabread/response-helper');
+
 const nodeModel = require('../models/nodeModel');
 const nodeDetailsModel = require('../models/nodeDetailsModel');
 
@@ -9,10 +11,17 @@ const {
 const createNode = (newNode, correlationId) => {
   const node = newNode;
 
-  return initializeSocket(node.id, correlationId)
-    .then((edgeSocketPath) => {
-      node.edgeSocketPath = edgeSocketPath;
-      return nodeModel.saveNode(node, correlationId);
+  return nodeModel.findNodeById(node.id, correlationId)
+    .then((foundNode) => {
+      if (foundNode) {
+        throw getRichError('Conflict', 'Could not save node, node already exists', { node }, null, 'error', correlationId);
+      }
+
+      return initializeSocket(node.id, correlationId)
+        .then((edgeSocketPath) => {
+          node.edgeSocketPath = edgeSocketPath;
+          return nodeModel.saveNode(node, correlationId);
+        });
     });
 };
 
