@@ -115,6 +115,7 @@ const deleteContainerById = (nodeId, containerId, correlationId) => request(
   correlationId,
 );
 
+// TODO reimplement this method using GET /nodes endpoint on mdeploy
 const fetchContainers = (nodeId, correlationId) => request(
   nodeId,
   {
@@ -124,10 +125,14 @@ const fetchContainers = (nodeId, correlationId) => request(
   correlationId,
 );
 
+const fetchContainersById = (nodeId, containerId, correlationId) => fetchContainers(nodeId, correlationId)
+  .then((containers) => containers.find((container) => container.id === containerId));
+
 module.exports = {
   fetchImages,
   createImage,
-  fetchContainers,
   createContainer,
+  fetchContainers,
+  fetchContainersById,
   deleteContainerById,
 };

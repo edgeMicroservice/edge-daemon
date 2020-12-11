@@ -90,6 +90,8 @@ const identifyRequest = (nodeId, request, correlationId) => {
         }
 
         if (endpoint.indexOf('/start') > -1) {
+          console.log('===> /start');
+          console.log('===> request', request);
           const containerId = endpoint.split('/')[2];
 
           return Promise.resolve({
