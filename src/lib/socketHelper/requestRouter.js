@@ -128,8 +128,6 @@ const createContainer = (
 
 const startContainer = (nodeId, containerId, formattedRequest, correlationId) => dockerRequest(nodeId, formattedRequest, correlationId)
   .then((dockerResponse) => {
-    // console.log('===> in startContainer');
-    // console.log('===> dockerResponse', dockerResponse);
     if (dockerResponse.status.code !== 404) return dockerResponse;
 
     return mdeployFetchContainersById(nodeId, containerId, correlationId)
@@ -140,7 +138,23 @@ const startContainer = (nodeId, containerId, formattedRequest, correlationId) =>
         completeResponse.status.code = 204;
         completeResponse.status.message = 'No Content';
         completeResponse.data = [];
-        // console.log('===> completeResponse', completeResponse);
+        return completeResponse;
+      })
+      .catch(() => dockerResponse);
+  });
+
+const killContainer = (nodeId, containerId, formattedRequest, correlationId) => dockerRequest(nodeId, formattedRequest, correlationId)
+  .then((dockerResponse) => {
+    if (dockerResponse.status.code !== 404) return dockerResponse;
+
+    return mdeployFetchContainersById(nodeId, containerId, correlationId)
+      .then((foundContainer) => {
+        if (!foundContainer) return dockerResponse;
+
+        const completeResponse = { ...dockerResponse };
+        completeResponse.status.code = 204;
+        completeResponse.status.message = 'No Content';
+        completeResponse.data = [];
         return completeResponse;
       })
       .catch(() => dockerResponse);
@@ -165,16 +179,13 @@ const routeRequest = (nodeId, formattedRequest, correlationId) => identifyReques
         return dockerRequest(nodeId, formattedRequest, correlationId);
 
       case requestTypes.CREATE_CONTAINER:
-        // console.log('===> in createContainer', {
-        //   nodeId, formattedRequest, data, correlationId,
-        // });
         return createContainer(nodeId, formattedRequest, data, correlationId);
 
       case requestTypes.START_CONTAINER:
         return startContainer(nodeId, data.containerId, formattedRequest, correlationId);
 
-      case requestTypes.KILL_CONTAINER: // Docker Only
-        return dockerRequest(nodeId, formattedRequest, correlationId);
+      case requestTypes.KILL_CONTAINER:
+        return killContainer(nodeId, data.containerId, formattedRequest, correlationId);
 
       case requestTypes.DELETE_CONTAINER:
         return mdeployDeleteContainerById(nodeId, data.containerId, correlationId)
@@ -182,31 +193,10 @@ const routeRequest = (nodeId, formattedRequest, correlationId) => identifyReques
           .then(() => dockerRequest(nodeId, formattedRequest, correlationId));
 
       case requestTypes.FETCH_ALL_CONTAINERS:
-        return fetchAllContainers(nodeId, formattedRequest, correlationId)
-          // DELETE ME
-          .then((dataa) => {
-            console.log('===> fetchAllContainers success', dataa);
-            return dataa;
-          })
-          .catch((error) => {
-            console.log('===> fetchAllContainers error', error);
-            throw error;
-          });
+        return fetchAllContainers(nodeId, formattedRequest, correlationId);
 
       case requestTypes.FETCH_CONTAINER:
-        // console.log('===> in fetchContainerById', {
-        //   nodeId, data, correlationId,
-        // });
-        return fetchContainerById(nodeId, data.containerId, correlationId)
-          // DELETE ME
-          .then((dataa) => {
-            console.log('===> fetchContainerById success', dataa);
-            return dataa;
-          })
-          .catch((error) => {
-            console.log('===> fetchContainerById error', error);
-            throw error;
-          });
+        return fetchContainerById(nodeId, data.containerId, correlationId);
 
       default:
         return Promise.reject(getRichError('System', 'Unknown identification for request received', { nodeId, identifiedRequest }, null, 'error', correlationId));

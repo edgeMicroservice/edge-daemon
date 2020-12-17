@@ -27,7 +27,7 @@ const addLabels = (dockerResponse, mdeployResponse) => {
     updatedResponse.Config.Labels = { ...updatedResponse.Config.Labels, ...newLabels };
   }
   else {
-    updatedResponse.Labels = { ...updatedResponse.Config.Labels, ...newLabels };
+    updatedResponse.Labels = { ...updatedResponse.Labels, ...newLabels };
   }
 
   return updatedResponse;
