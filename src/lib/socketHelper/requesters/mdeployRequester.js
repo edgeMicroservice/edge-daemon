@@ -99,7 +99,7 @@ const createContainer = (nodeId, agreementId, name, body, correlationId) => getC
         endpoint: MDEPLOY_ENDPOINTS.CONTAINERS,
         body: {
           env,
-          name: `${name}-v1`,
+          name: `${agreementId}-${name}-v1`,
           imageId: `${projectId}-${name}-v1`,
           imageHostNodeId: gatewayNode.nodeId,
         },
