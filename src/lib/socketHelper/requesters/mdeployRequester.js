@@ -83,8 +83,10 @@ const createContainer = (nodeId, agreementId, name, body, correlationId) => getC
       'MCM.BASE_API_PATH': `/${name}/v1`,
     };
 
-    if (body.Env) {
-      body.Env.forEach((envEntry) => {
+    const parsedBody = JSON.parse(body);
+
+    if (parsedBody.Env) {
+      parsedBody.Env.forEach((envEntry) => {
         const [envName, envValue] = envEntry.split('=');
         env[envName] = envValue;
       });
@@ -96,9 +98,9 @@ const createContainer = (nodeId, agreementId, name, body, correlationId) => getC
         method: 'POST',
         endpoint: MDEPLOY_ENDPOINTS.CONTAINERS,
         body: {
-          name: `${agreementId}-${name}-v1`,
-          imageName: `${name}-v1`,
           env,
+          name: `${agreementId}-${name}-v1`,
+          imageId: `${projectId}-${name}-v1`,
           imageHostNodeId: gatewayNode.nodeId,
         },
       },
@@ -115,6 +117,7 @@ const deleteContainerById = (nodeId, containerId, correlationId) => request(
   correlationId,
 );
 
+// TODO reimplement this method using GET /nodes endpoint on mdeploy
 const fetchContainers = (nodeId, correlationId) => request(
   nodeId,
   {
@@ -124,10 +127,14 @@ const fetchContainers = (nodeId, correlationId) => request(
   correlationId,
 );
 
+const fetchContainersById = (nodeId, containerId, correlationId) => fetchContainers(nodeId, correlationId)
+  .then((containers) => containers.find((container) => container.id === containerId));
+
 module.exports = {
   fetchImages,
   createImage,
-  fetchContainers,
   createContainer,
+  fetchContainers,
+  fetchContainersById,
   deleteContainerById,
 };

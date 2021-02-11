@@ -48,6 +48,7 @@ module.exports = (() => {
       socketLogsMaxTotal: parseInt(process.env.SOCKET_LOGS_MAX_TOTAL, 10) || 100,
       consoleLogSocketCommunication: process.env.CONSOLE_LOG_SOCKET_COMMUNICATION === 'yes',
       dockerDeploymentContainerEnv: process.env.DOCKER_DEPLOYMENT_CONTAINER_ENV || 'HZN_DEPLOYMENT_LOCATION=gatewayNode',
+      containerLabelPrefix: process.env.CONTAINER_LABEL_PREFIX || 'openhorizon.anax',
     },
   });
 

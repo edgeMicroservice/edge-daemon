@@ -21,35 +21,17 @@ const SERVER_TYPE = {
   MDEPLOY_FACING: 'mdeploy facing',
 };
 
-const checkIfValidEdgeSocket = (edgeSocket, correlationId) => Promise.resolve()
-  .then(() => {
-    if (!edgeSocket) {
-      throw getRichError('System', 'Invalid edgeSocket', { edgeSocket }, null, 'error', correlationId);
-    }
-    if (!edgeSocket.logs || !Array.isArray(edgeSocket.logs)) {
-      throw getRichError('System', 'Invalid edgeSocket, logs array not present', { edgeSocket }, null, 'error', correlationId);
-    }
-  });
+const saveEdgeSocket = (nodeId) => {
+  if (!edgeSockets[nodeId]) {
+    edgeSockets[nodeId] = { logs: [] };
+  }
 
-const saveEdgeSocket = (nodeId, edgeSocket, correlationId) => checkIfValidEdgeSocket(edgeSocket, correlationId)
-  .catch((err) => {
-    throw getRichError('System', 'Could not save edgeSocket, invalid format', { edgeSocket }, err, 'error', correlationId);
-  })
-  .then(() => {
-    if (edgeSockets[nodeId]) {
-      throw getRichError('System', 'Could not save edgeSocket, edgeSocket already exists', { edgeSocket }, null, 'error', correlationId);
-    }
-    edgeSockets[nodeId] = edgeSocket;
-    return edgeSocket;
-  });
+  return Promise.resolve(edgeSockets[nodeId]);
+};
 
 const findEdgeSocketById = (nodeId) => Promise.resolve(edgeSockets[nodeId]);
 
-const saveLog = (nodeId, level, serverType, message, metadata, correlationId) => findEdgeSocketById(nodeId)
-  .then((edgeSocket) => {
-    if (edgeSocket) return edgeSocket;
-    return saveEdgeSocket(nodeId, { logs: [] }, correlationId);
-  })
+const saveLog = (nodeId, level, serverType, message, metadata, correlationId) => saveEdgeSocket(nodeId, correlationId)
   .then((edgeSocket) => {
     if (edgeSocket.logs.length > socketLogsMaxTotal - 1) edgeSocket.logs.shift();
     const logMessage = `${serverType}: ${message}`;
@@ -87,7 +69,6 @@ module.exports = {
   LOG_TYPE,
   SERVER_TYPE,
   saveLog,
-  saveEdgeSocket,
   getEdgeSocketById,
   findEdgeSocketById,
   deleteEdgeSocketById,

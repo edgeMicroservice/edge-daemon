@@ -4,7 +4,8 @@ const { requestTypes, identifyRequest } = require('./requestIdentifier');
 const { SERVER_TYPE, LOG_TYPE, saveLog } = require('../../models/nodeDetailsModel');
 
 const {
-  converContainerResponse,
+  convertContainerResponseForFetchOne,
+  convertContainerResponseForFetchAll,
 } = require('./converters/mdeployDockerResponseConverter');
 
 const {
@@ -13,10 +14,11 @@ const {
 } = require('./requesters/dockerRequester');
 
 const {
+  createImage: mdeployCreateImage,
   createContainer: mdeployCreateContainer,
   fetchContainers: mdeployFetchContainers,
+  fetchContainersById: mdeployFetchContainersById,
   deleteContainerById: mdeployDeleteContainerById,
-  createImage: mdeployCreateImage,
 } = require('./requesters/mdeployRequester');
 
 const adjustContentLength = (dockerResponse) => {
@@ -53,7 +55,7 @@ const fetchAllContainers = (nodeId, formattedRequest, correlationId) => dockerRe
   .then((dockerResponse) => mdeployFetchContainers(nodeId, correlationId)
     .then((mdeployResponse) => {
       const dockerContainers = JSON.parse(dockerResponse.data[0]);
-      const mdeployContainers = mdeployResponse.map((container) => converContainerResponse(nodeId, container, correlationId));
+      const mdeployContainers = mdeployResponse.map((container) => convertContainerResponseForFetchAll(nodeId, container, correlationId));
       const allContainers = [...dockerContainers, ...mdeployContainers];
 
       const completeResponse = { ...dockerResponse };
@@ -67,15 +69,15 @@ const fetchContainerById = (nodeId, containerId, correlationId) => dockerFetchCo
     if (Array.isArray(dockerResponse.data[0]) && dockerResponse.data[0].length > 0) {
       return dockerResponse;
     }
-    return mdeployFetchContainers(nodeId, correlationId)
-      .then((mdeployResponse) => {
-        const foundContainer = mdeployResponse.find((container) => container.id === containerId);
-
+    return mdeployFetchContainersById(nodeId, containerId, correlationId)
+      .then((foundContainer) => {
         if (!foundContainer) return dockerResponse;
 
-        const convertedResponse = converContainerResponse(nodeId, foundContainer, correlationId);
+        const convertedResponse = convertContainerResponseForFetchOne(nodeId, foundContainer, correlationId);
         const completeResponse = { ...dockerResponse };
         completeResponse.data = [`${JSON.stringify(convertedResponse)}\n`];
+        completeResponse.status.code = 200;
+        completeResponse.status.message = 'OK';
         return adjustContentLength(completeResponse);
       })
       .catch(() => dockerResponse);
@@ -94,8 +96,69 @@ const createContainer = (
 ) => {
   if (isGatewayDeployment) return dockerRequest(nodeId, formattedRequest, correlationId);
 
-  return mdeployCreateContainer(nodeId, agreementId, name, body, correlationId);
+  return mdeployCreateContainer(nodeId, agreementId, name, body, correlationId)
+    .then((mdeployResponse) => {
+      // TODO Create a separate function to get response object in this format
+      const response = {};
+
+      try {
+        response.data = [`${JSON.stringify({
+          Id: mdeployResponse.id,
+          Warnings: [],
+        })}\n`];
+      }
+      catch (e) {
+        // TODO Handle this
+        console.log('===> error', e);
+      }
+
+      response.headers = {
+        'Accept-Encoding': 'gzip',
+        Connection: 'close',
+      };
+
+      response.status = {
+        code: 201,
+        message: 'Created',
+      };
+
+      return response;
+    });
 };
+
+const startContainer = (nodeId, containerId, formattedRequest, correlationId) => dockerRequest(nodeId, formattedRequest, correlationId)
+  .then((dockerResponse) => {
+    if (dockerResponse.status.code !== 404) return dockerResponse;
+
+    return mdeployFetchContainersById(nodeId, containerId, correlationId)
+      .then((foundContainer) => {
+        if (!foundContainer) return dockerResponse;
+
+        const completeResponse = { ...dockerResponse };
+        completeResponse.status.code = 204;
+        completeResponse.status.message = 'No Content';
+        completeResponse.data = [];
+        return completeResponse;
+      })
+      .catch(() => dockerResponse);
+  });
+
+const killContainer = (nodeId, containerId, formattedRequest, correlationId) => dockerRequest(nodeId, formattedRequest, correlationId)
+  .then((dockerResponse) => {
+    if (dockerResponse.status.code !== 404) return dockerResponse;
+
+    return mdeployFetchContainersById(nodeId, containerId, correlationId)
+      .then((foundContainer) => {
+        if (!foundContainer) return dockerResponse;
+
+        const completeResponse = { ...dockerResponse };
+        completeResponse.status.code = 204;
+        completeResponse.status.message = 'No Content';
+        completeResponse.data = [];
+        return completeResponse;
+      })
+      .catch(() => dockerResponse);
+  });
 
 const routeRequest = (nodeId, formattedRequest, correlationId) => identifyRequest(nodeId, formattedRequest, correlationId)
   .then((identifiedRequest) => {
@@ -118,11 +181,11 @@ const routeRequest = (nodeId, formattedRequest, correlationId) => identifyReques
       case requestTypes.CREATE_CONTAINER:
         return createContainer(nodeId, formattedRequest, data, correlationId);
 
-      case requestTypes.START_CONTAINER: // Docker Only
-        return dockerRequest(nodeId, formattedRequest, correlationId);
+      case requestTypes.START_CONTAINER:
+        return startContainer(nodeId, data.containerId, formattedRequest, correlationId);
 
-      case requestTypes.KILL_CONTAINER: // Docker Only
-        return dockerRequest(nodeId, formattedRequest, correlationId);
+      case requestTypes.KILL_CONTAINER:
+        return killContainer(nodeId, data.containerId, formattedRequest, correlationId);
 
       case requestTypes.DELETE_CONTAINER:
         return mdeployDeleteContainerById(nodeId, data.containerId, correlationId)
