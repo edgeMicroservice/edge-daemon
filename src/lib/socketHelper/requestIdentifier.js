@@ -72,10 +72,17 @@ const identifyRequest = (nodeId, request, correlationId) => {
             parsedBody = body;
           }
 
+          const env = {};
+          const image = parsedBody.Image;
           let isGatewayDeployment = false;
 
           if (parsedBody.Env && Array.isArray(parsedBody.Env) && parsedBody.Env.length > 0) {
-            isGatewayDeployment = parsedBody.Env.some((env) => env === dockerDeploymentContainerEnv);
+            parsedBody.Env.forEach((envEntry) => {
+              const [envName, envValue] = envEntry.split('=');
+              env[envName] = envValue;
+            });
+
+            isGatewayDeployment = parsedBody.Env.some((envVar) => envVar === dockerDeploymentContainerEnv);
           }
 
           return Promise.resolve({
@@ -84,6 +91,8 @@ const identifyRequest = (nodeId, request, correlationId) => {
               agreementId,
               name,
               body,
+              env,
+              image,
               isGatewayDeployment,
             },
           });

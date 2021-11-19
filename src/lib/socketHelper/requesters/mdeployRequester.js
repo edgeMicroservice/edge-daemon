@@ -77,13 +77,13 @@ const createImage = (nodeId, image, correlationId) => getCurrentNode()
     correlationId,
   ));
 
-const createContainer = (nodeId, agreementId, name, body, correlationId) => getCurrentNode()
+const createContainer = (nodeId, agreementId, name, dockerRequestBody, correlationId) => getCurrentNode()
   .then((gatewayNode) => {
     const env = {
       'MCM.BASE_API_PATH': `/${name}/v1`,
     };
 
-    const parsedBody = JSON.parse(body);
+    const parsedBody = JSON.parse(dockerRequestBody);
 
     if (parsedBody.Env) {
       parsedBody.Env.forEach((envEntry) => {
