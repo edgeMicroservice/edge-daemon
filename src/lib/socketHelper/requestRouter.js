@@ -115,6 +115,7 @@ const createContainer = (
       response.headers = {
         'Accept-Encoding': 'gzip',
         Connection: 'close',
+        'x-correlationId': correlationId,
       };
 
       response.status = {

@@ -14,6 +14,7 @@ const pack = require('../../package.json');
  * | EDGE_ENGINE_URL | Url for the edgeEngine (gateway) | http://localhost:8083 |
  * | EDGE_ENGINE_PROJECT_ID | mimik developer project id | | should be same for mdeploy
  * | EDGE_ENGINE_MDEPLOY_ENDPOINT | mdeploy endpoint | /mdeploy/v1 |
+ * | MDEPLOY_APIKEY | to to use to reach mdeploy | |
  * | SOCKETS_DIR | Directory to store/create unix sockets in | /var/tmp/oh/sockets |
  * | DOCKER_SOCKET_PATH | Path to the docker daemon socket | /var/run/docker.sock |
  * | SOCKET_LOGS_MAX_TOTAL | Maximum number of total socket communication logs persisted and served using api per node socket | 100 | logs are kept by newest (older gets deleted if max total number is hit)
@@ -34,7 +35,7 @@ module.exports = (() => {
     dependencies: {
       MDEPLOY: {
         url: `${edgeEngineUrl}/${edgeEngineProjectId}${edgeEngineMdeployEndpoint}`,
-        audience: process.env.MDEPLOY_AUDIENCE,
+        apiKey: process.env.MDEPLOY_APIKEY,
       },
     },
     custom: {
