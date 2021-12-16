@@ -1,18 +1,52 @@
 {
+  "plugins": [
+    "@mimik/document-env",
+    "@mimik/dependencies"
+  ],
   "env": {
     "node": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2020
   },
   "extends": "airbnb",
   "rules": {
     "import/no-extraneous-dependencies": ["error", {"devDependencies": true}],
     "brace-style": [1, "stroustrup", {"allowSingleLine": true}],
-    "no-confusing-arrow": [0],
+    "no-confusing-arrow": [0], // arrow isnt confusing
     "max-len": [1, 180, { "ignoreComments": true }],
     "linebreak-style": 0,
     "quotes": [1, "single"],
-    "semi": [1, "always"]
+    "semi": [1, "always"],
+    "no-process-env": ["error"],
+    "@mimik/document-env/validate-document-env": 2,
+    "@mimik/dependencies/case-sensitive": 2,
+    "@mimik/dependencies/no-cycles": 2,
+    "@mimik/dependencies/no-unresolved": 2,
+    "@mimik/dependencies/require-json-ext": 2
   },
-  "settings": {
+  "overrides": [
+    {
+      "files": [
+        "src/configuration/config.js",
+        "test/**/*.js",
+        "tools/**/*.js"
+      ],
+      "rules": {
+        "no-process-env": "off"
+      }
+    },
+    {
+      "files": [
+        "test/**/*.js",
+        "tools/**/*.js"
+      ],
+      "rules": {
+        "@mimik/document-env/validate-document-env": "off"
+      }
+    }
+  ],
+  "settings":{
     "react": {
       "version": "latest"
     }
