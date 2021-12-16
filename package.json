@@ -58,8 +58,8 @@
     "uuid": "8.3.2"
   },
   "devDependencies": {
-    "@mimik/git-hooks": "~1.5.2",
-    "@mimik/local": "~4.4.1",
+    "@mimik/git-hooks": "~1.5.3",
+    "@mimik/local": "~4.4.2",
     "eslint-config-airbnb": "18.2.1",
     "eslint-plugin-import": "2.25.3",
     "eslint-plugin-jsx-a11y": "6.5.1",
