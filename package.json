@@ -41,7 +41,7 @@
   ],
   "private": true,
   "dependencies": {
-    "@mimik/configuration": "4.4.0",
+    "@mimik/configuration": "4.4.1",
     "@mimik/dynamosizer": "1.6.7",
     "@mimik/init": "3.6.0",
     "@mimik/request-helper": "1.7.3",
