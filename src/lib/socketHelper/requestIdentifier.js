@@ -1,7 +1,7 @@
 const Promise = require('bluebird');
 const querystring = require('querystring');
 
-const { getRichError } = require('@bananabread/response-helper');
+const { getRichError } = require('@mimik/response-helper');
 
 const { dockerDeploymentContainerEnv } = require('../../configuration/config');
 

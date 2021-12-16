@@ -1,7 +1,7 @@
 const Promise = require('bluebird');
 
-const logger = require('@bananabread/sumologic-winston-logger');
-const { getRichError } = require('@bananabread/response-helper');
+const logger = require('@mimik/sumologic-winston-logger');
+const { getRichError } = require('@mimik/response-helper');
 
 const {
   socketLogsMaxTotal,

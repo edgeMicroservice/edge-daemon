@@ -2,7 +2,7 @@ const Promise = require('bluebird');
 const net = require('net');
 const fs = require('fs-extra');
 
-const { getCorrelationId } = require('@bananabread/request-helper');
+const { getCorrelationId } = require('@mimik/request-helper');
 
 const { socketsDir } = require('../../configuration/config');
 

@@ -1,4 +1,4 @@
-const { getRichError } = require('@bananabread/response-helper');
+const { getRichError } = require('@mimik/response-helper');
 
 const { requestTypes, identifyRequest } = require('./requestIdentifier');
 const { SERVER_TYPE, LOG_TYPE, saveLog } = require('../../models/nodeDetailsModel');
