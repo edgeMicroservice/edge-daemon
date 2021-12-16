@@ -20,6 +20,7 @@ const pack = require('../../package.json');
  * | SOCKET_LOGS_MAX_TOTAL | Maximum number of total socket communication logs persisted and served using api per node socket | 100 | logs are kept by newest (older gets deleted if max total number is hit)
  * | CONSOLE_LOG_SOCKET_COMMUNICATION | Whether to have socket communincation logs logged in the service console  | no | to enable set to: yes
  * | DOCKER_DEPLOYMENT_CONTAINER_ENV | Env var to add to docker container during deployment to set deployment location as docker instead of mdeploy | HZN_DEPLOYMENT_LOCATION=gatewayNode |
+ * | CONTAINER_LABEL_PREFIX | prefix to associate to the conatainer label | openhorizon.anax
  *
  * These values are on top of what is needed in the [configuration](https://bitbucket.org/mimiktech/configuration) library.
  *
