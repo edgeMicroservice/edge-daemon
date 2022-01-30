@@ -71,7 +71,7 @@ const createImage = (nodeId, image, correlationId) => getCurrentNode(correlation
   .then((gatewayNode) => request(
     nodeId,
     {
-      method: 'POST',
+      method: 'PUT',
       endpoint: MDEPLOY_ENDPOINTS.IMAGES,
       body: {
         nodeId: gatewayNode.nodeId,
@@ -99,7 +99,7 @@ const createContainer = (nodeId, agreementId, name, dockerRequestBody, correlati
     return request(
       nodeId,
       {
-        method: 'POST',
+        method: 'PUT',
         endpoint: MDEPLOY_ENDPOINTS.CONTAINERS,
         body: {
           env,

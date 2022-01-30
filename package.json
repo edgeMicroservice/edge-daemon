@@ -2,7 +2,7 @@
   "name": "mimik_edgedaemon",
   "version": "1.1.0",
   "swaggerFile": {
-    "version": "1.1.0",
+    "version": "1.1.1",
     "account": "mimik",
     "name": "edgedaemon"
   },
@@ -41,7 +41,8 @@
   ],
   "private": true,
   "dependencies": {
-    "@mimik/configuration": "4.4.1",
+    "@mimik/cluster": "2.4.0",
+    "@mimik/configuration": "4.4.4",
     "@mimik/dynamosizer": "1.6.7",
     "@mimik/init": "3.6.0",
     "@mimik/request-helper": "1.7.3",
@@ -59,11 +60,11 @@
   },
   "devDependencies": {
     "@mimik/git-hooks": "~1.5.3",
-    "@mimik/local": "~4.4.2",
-    "eslint-config-airbnb": "18.2.1",
-    "eslint-plugin-import": "2.25.3",
+    "@mimik/local": "~4.4.5",
+    "eslint-config-airbnb": "19.0.4",
+    "eslint-plugin-import": "2.25.4",
     "eslint-plugin-jsx-a11y": "6.5.1",
-    "eslint-plugin-react": "7.27.1",
+    "eslint-plugin-react": "7.28.0",
     "gulp": "4.0.2"
   },
   "repository": {
