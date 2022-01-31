@@ -73,6 +73,7 @@ const identifyRequest = (nodeId, request, correlationId) => {
           }
 
           const env = {};
+          const labels = {};
           const image = parsedBody.Image;
           let isGatewayDeployment = false;
 
@@ -92,6 +93,7 @@ const identifyRequest = (nodeId, request, correlationId) => {
               name,
               body,
               env,
+              labels,
               image,
               isGatewayDeployment,
             },

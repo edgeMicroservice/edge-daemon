@@ -38,6 +38,8 @@ const convertContainerResponse = (sampleResponse, mdeployResponse) => {
   convertedResponse.Id = mdeployResponse.id;
   convertedResponse.Config = {};
   convertedResponse.Config.Env = Object.entries(mdeployResponse.env).map(([envKey, envValue]) => `${envKey}=${envValue}`);
+  convertedResponse.Config.Labels = { ...convertedResponse.Config.Labels, ...mdeployResponse.labels };
+
   return convertedResponse;
 };
 

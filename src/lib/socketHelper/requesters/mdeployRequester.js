@@ -103,6 +103,7 @@ const createContainer = (nodeId, agreementId, name, dockerRequestBody, correlati
         endpoint: MDEPLOY_ENDPOINTS.CONTAINERS,
         body: {
           env,
+          labels: parsedBody.Labels,
           name: `${agreementId}-${name}-v1`,
           imageId: `${projectId}-${name}-v1`,
           imageHostNodeId: gatewayNode.nodeId,
