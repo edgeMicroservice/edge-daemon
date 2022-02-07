@@ -47,7 +47,7 @@ module.exports = (() => {
         projectId: edgeEngineProjectId,
         mdeployEndpoint: edgeEngineMdeployEndpoint,
       },
-      socketsDir: process.env.SOCKETS_DIR || `${homeDir}/.oh/sockets`,
+      socketsDir: process.env.SOCKETS_DIR || `${homeDir}/oh/sockets`,
       dockerSocketPath: process.env.DOCKER_SOCKET_PATH || '/var/run/docker.sock',
       socketLogsMaxTotal: parseInt(process.env.SOCKET_LOGS_MAX_TOTAL, 10) || 100,
       consoleLogSocketCommunication: process.env.CONSOLE_LOG_SOCKET_COMMUNICATION === 'yes',

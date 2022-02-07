@@ -145,7 +145,7 @@ function cleanup() {
       saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.EDGEDAEMON_FACING, 'Received shutdown request');
       terminateSocket(nodeId);
     })
-      .then(() => {
+      .finally(() => {
         process.exit(0);
       });
   }

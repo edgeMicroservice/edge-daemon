@@ -104,7 +104,8 @@ const createContainer = (nodeId, agreementId, name, dockerRequestBody, correlati
         body: {
           env,
           labels: parsedBody.Labels,
-          name: `${agreementId}-${name}-v1`,
+          metadata: parsedBody,
+          name: `${agreementId.substr(0, 12)}-${name}`,
           imageId: `${projectId}-${name}-v1`,
           imageHostNodeId: gatewayNode.nodeId,
         },

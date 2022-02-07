@@ -75,7 +75,7 @@ const request = (
 const fetchContainerById = (nodeId, containerId, correlationId) => {
   const options = { ...genericDockerOptions };
   options.method = 'GET';
-  options.headers['x-correlation-id]'] = correlationId;
+  // options.headers['x-correlation-id]'] = correlationId;
   options.endpoint = `${DOCKER_ENDPOINTS.CONTAINERS}/${containerId}/json?`;
 
   return request(
