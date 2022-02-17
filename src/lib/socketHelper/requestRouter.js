@@ -67,9 +67,7 @@ const fetchAllContainers = (nodeId, formattedRequest, correlationId) => dockerRe
       completeResponse.data = [`${JSON.stringify(allContainers)}\n`];
       return adjustContentLength(completeResponse, true);
     })
-    .catch(() => {
-      return dockerResponse;
-    }));
+    .catch(() => dockerResponse));
 
 const fetchContainerById = (nodeId, containerId, correlationId) => dockerFetchContainerById(nodeId, containerId, correlationId)
   .then((dockerResponse) => {
