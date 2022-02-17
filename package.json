@@ -43,7 +43,6 @@
   "dependencies": {
     "@mimik/cluster": "2.4.0",
     "@mimik/configuration": "4.4.4",
-    "@mimik/dynamosizer": "1.6.7",
     "@mimik/init": "3.6.0",
     "@mimik/request-helper": "1.7.3",
     "@mimik/request-retry": "2.0.6",
@@ -51,7 +50,6 @@
     "@mimik/sumologic-winston-logger": "1.6.6",
     "@mimik/swagger-helper": "2.5.0",
     "@mimik/systeminfo": "2.3.8",
-    "@mimik/edge-ms-helper": "^1.2.0",
     "bluebird": "3.7.2",
     "connect": "3.7.0",
     "fs-extra": "10.0.0",
@@ -69,6 +67,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://bitbucket.org/mimiktech/edgedaemon"
+    "url": "https://bitbucket.org/mimiktech/edge-daemon"
   }
 }
