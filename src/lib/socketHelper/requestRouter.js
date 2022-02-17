@@ -106,15 +106,10 @@ const createContainer = (
       // TODO Create a separate function to get response object in this format
       const response = {};
 
-      try {
-        response.data = [`${JSON.stringify({
-          Id: mdeployResponse.id,
-          Warnings: [],
-        })}\n`];
-      }
-      catch (e) {
-        // TODO Handle this
-      }
+      response.data = [`${JSON.stringify({
+        Id: mdeployResponse.id,
+        Warnings: [],
+      })}\n`];
 
       response.headers = {
         'Accept-Encoding': 'gzip',
