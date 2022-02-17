@@ -1,5 +1,3 @@
-const { containerLabelPrefix } = require('../../../configuration/config');
-
 const {
   LOG_TYPE,
   SERVER_TYPE,

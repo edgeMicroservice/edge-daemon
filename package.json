@@ -42,7 +42,7 @@
   "private": true,
   "dependencies": {
     "@mimik/cluster": "2.4.0",
-    "@mimik/configuration": "4.4.4",
+    "@mimik/configuration": "4.4.8",
     "@mimik/init": "3.6.0",
     "@mimik/request-helper": "1.7.3",
     "@mimik/request-retry": "2.0.6",
@@ -59,7 +59,7 @@
   "devDependencies": {
     "@mimik/git-hooks": "~1.5.3",
     "@mimik/local": "~4.4.5",
-    "eslint-config-airbnb": "19.0.4",
+    "eslint-config-airbnb": "18.2.1",
     "eslint-plugin-import": "2.25.4",
     "eslint-plugin-jsx-a11y": "6.5.1",
     "eslint-plugin-react": "7.28.0",

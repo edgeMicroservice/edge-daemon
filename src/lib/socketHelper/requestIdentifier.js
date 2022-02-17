@@ -35,11 +35,12 @@ const identifyRequest = (nodeId, request, correlationId) => {
         const { fromImage, tag } = querystring.decode(qs);
 
         const fromImageSplit = fromImage.split('/');
-        let user, image;
-        
+        let user;
+        let image;
+
         if (fromImageSplit.length > 1) [user, image] = fromImageSplit;
-        else image = fromImageSplit[0]
-        
+        else [image] = fromImageSplit;
+
         return Promise.resolve({
           type: requestTypes.CREATE_IMAGE,
           data: {

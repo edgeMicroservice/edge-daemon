@@ -32,7 +32,8 @@ module.exports = (() => {
   const edgeEngineProjectId = process.env.EDGE_ENGINE_PROJECT_ID;
   const edgeEngineMdeployEndpoint = process.env.EDGE_ENGINE_MDEPLOY_ENDPOINT || '/mdeploy/v1';
 
-  const homeDir = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
+  // eslint-disable-next-line @mimik/document-env/validate-document-env
+  const homeDir = process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
 
   const configuration = setConfig(pack, {
     dependencies: {
