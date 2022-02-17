@@ -1,10 +1,11 @@
-const rp = require('request-promise');
+const { rpRetry } = require('@mimik/request-retry');
 
 const config = require('../../../configuration/config');
 const { getCurrentNode } = require('../../../external/jsonRPCRequests');
 const { SERVER_TYPE, LOG_TYPE, saveLog } = require('../../../models/nodeDetailsModel');
 
 const mdeployUrl = config.dependencies.MDEPLOY.url;
+const { apiKey } = config.dependencies.MDEPLOY;
 const { projectId } = config.edgeEngine;
 
 const MDEPLOY_ENDPOINTS = {
@@ -23,9 +24,13 @@ const request = (
   correlationId,
 ) => {
   const options = {
-    uri: `${mdeployUrl}${MDEPLOY_ENDPOINTS.BATCHOPS}`,
     method: 'POST',
-    body: {
+    headers: {
+      'x-correlation-id': correlationId,
+      apiKey,
+    },
+    url: `${mdeployUrl}${MDEPLOY_ENDPOINTS.BATCHOPS}`,
+    data: {
       nodes: [
         nodeId,
       ],
@@ -34,12 +39,11 @@ const request = (
         method,
       },
     },
-    json: true,
   };
-  if (body) options.body.request.body = body;
+  if (body) options.data.request.body = body;
 
   saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.MDEPLOY_FACING, 'Requesting mdeploy', { options }, correlationId);
-  return rp(options)
+  return rpRetry(options)
     .then((response) => {
       if (!response.data || !Array.isArray(response.data) || !response.data[0] || response.data[0].responseType !== 'success') {
         throw new Error(response);
@@ -63,11 +67,11 @@ const fetchImages = (nodeId, correlationId) => request(
   correlationId,
 );
 
-const createImage = (nodeId, image, correlationId) => getCurrentNode()
+const createImage = (nodeId, image, correlationId) => getCurrentNode(correlationId)
   .then((gatewayNode) => request(
     nodeId,
     {
-      method: 'POST',
+      method: 'PUT',
       endpoint: MDEPLOY_ENDPOINTS.IMAGES,
       body: {
         nodeId: gatewayNode.nodeId,
@@ -77,7 +81,7 @@ const createImage = (nodeId, image, correlationId) => getCurrentNode()
     correlationId,
   ));
 
-const createContainer = (nodeId, agreementId, name, dockerRequestBody, correlationId) => getCurrentNode()
+const createContainer = (nodeId, agreementId, name, dockerRequestBody, correlationId) => getCurrentNode(correlationId)
   .then((gatewayNode) => {
     const env = {
       'MCM.BASE_API_PATH': `/${name}/v1`,
@@ -95,11 +99,13 @@ const createContainer = (nodeId, agreementId, name, dockerRequestBody, correlati
     return request(
       nodeId,
       {
-        method: 'POST',
+        method: 'PUT',
         endpoint: MDEPLOY_ENDPOINTS.CONTAINERS,
         body: {
           env,
-          name: `${agreementId}-${name}-v1`,
+          labels: parsedBody.Labels,
+          metadata: parsedBody,
+          name: `${agreementId.substr(0, 12)}-${name}`,
           imageId: `${projectId}-${name}-v1`,
           imageHostNodeId: gatewayNode.nodeId,
         },

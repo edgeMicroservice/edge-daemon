@@ -1,5 +1,3 @@
-const { containerLabelPrefix } = require('../../../configuration/config');
-
 const {
   LOG_TYPE,
   SERVER_TYPE,
@@ -11,33 +9,31 @@ const {
   dockerFetchAllContainerSample,
 } = require('./samples');
 
-const SERVICE_NAME_LABEL = '.service_name';
-const AGREEMENT_ID_LABEL = '.agreement_id';
-
-const addLabels = (dockerResponse, mdeployResponse) => {
-  const updatedResponse = { ...dockerResponse };
-
-  const [agreementId, serviceName] = mdeployResponse.name.split('-');
-
-  const newLabels = {};
-  newLabels[`${containerLabelPrefix}${SERVICE_NAME_LABEL}`] = serviceName;
-  newLabels[`${containerLabelPrefix}${AGREEMENT_ID_LABEL}`] = agreementId;
-
-  if (updatedResponse.Config && updatedResponse.Config.Labels) {
-    updatedResponse.Config.Labels = { ...updatedResponse.Config.Labels, ...newLabels };
-  }
-  else {
-    updatedResponse.Labels = { ...updatedResponse.Labels, ...newLabels };
-  }
-
-  return updatedResponse;
-};
-
 const convertContainerResponse = (sampleResponse, mdeployResponse) => {
-  const convertedResponse = addLabels(sampleResponse, mdeployResponse);
+  const convertedResponse = { ...sampleResponse };
+
+  const finalEnv = Object.entries(mdeployResponse.env).map(([envKey, envValue]) => `${envKey}=${envValue}`);
+  const finalLabels = { ...mdeployResponse.labels };
+
   convertedResponse.Id = mdeployResponse.id;
-  convertedResponse.Config = {};
-  convertedResponse.Config.Env = Object.entries(mdeployResponse.env).map(([envKey, envValue]) => `${envKey}=${envValue}`);
+  convertedResponse.Config = mdeployResponse.metadata;
+  convertedResponse.Env = finalEnv;
+  convertedResponse.Config.Env = finalEnv;
+  convertedResponse.Config.Labels = finalLabels;
+  convertedResponse.Labels = finalLabels;
+
+  // Remove mdeploy properties
+  delete convertedResponse.env;
+  delete convertedResponse.clientId;
+  delete convertedResponse.created;
+  delete convertedResponse.id;
+  delete convertedResponse.image;
+  delete convertedResponse.imageId;
+  delete convertedResponse.name;
+  delete convertedResponse.state;
+  delete convertedResponse.labels;
+  delete convertedResponse.metadata;
+
   return convertedResponse;
 };
 

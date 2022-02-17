@@ -1,7 +1,7 @@
 const Promise = require('bluebird');
 const querystring = require('querystring');
 
-const { getRichError } = require('@bananabread/response-helper');
+const { getRichError } = require('@mimik/response-helper');
 
 const { dockerDeploymentContainerEnv } = require('../../configuration/config');
 
@@ -33,7 +33,14 @@ const identifyRequest = (nodeId, request, correlationId) => {
       if (method === 'POST' && endpoint.indexOf('/create') > -1) {
         const qs = endpoint.substring(endpoint.indexOf('?') + 1);
         const { fromImage, tag } = querystring.decode(qs);
-        const [user, image] = fromImage.split('/');
+
+        const fromImageSplit = fromImage.split('/');
+        let user;
+        let image;
+
+        if (fromImageSplit.length > 1) [user, image] = fromImageSplit;
+        else [image] = fromImageSplit;
+
         return Promise.resolve({
           type: requestTypes.CREATE_IMAGE,
           data: {
@@ -46,11 +53,11 @@ const identifyRequest = (nodeId, request, correlationId) => {
 
       if (method === 'GET') {
         const dataArr = endpoint.split('/');
-        const [image, tag] = dataArr[3].split('@');
+        const [image, tag] = dataArr[4].split('@');
         return Promise.resolve({
           type: requestTypes.FETCH_IMAGE,
           data: {
-            user: dataArr[2],
+            user: dataArr[3],
             image,
             tag,
           },
@@ -73,6 +80,7 @@ const identifyRequest = (nodeId, request, correlationId) => {
           }
 
           const env = {};
+          const labels = {};
           const image = parsedBody.Image;
           let isGatewayDeployment = false;
 
@@ -92,6 +100,7 @@ const identifyRequest = (nodeId, request, correlationId) => {
               name,
               body,
               env,
+              labels,
               image,
               isGatewayDeployment,
             },
@@ -123,7 +132,7 @@ const identifyRequest = (nodeId, request, correlationId) => {
 
       if (method === 'GET') {
         const endpointArgs = endpoint.split('/');
-        if (endpointArgs.length < 4) {
+        if (endpoint.indexOf('/containers/json') > -1) {
           const qs = endpoint.substring(endpoint.indexOf('?') + 1);
           const { all } = querystring.decode(qs);
           return Promise.resolve({
@@ -143,7 +152,7 @@ const identifyRequest = (nodeId, request, correlationId) => {
       }
 
       if (method === 'DELETE') {
-        const containerId = endpoint.split('/')[2];
+        const containerId = (endpoint.split('/')[2]).split('?')[0];
 
         return Promise.resolve({
           type: requestTypes.DELETE_CONTAINER,

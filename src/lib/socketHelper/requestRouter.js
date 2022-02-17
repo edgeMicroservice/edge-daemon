@@ -1,4 +1,4 @@
-const { getRichError } = require('@bananabread/response-helper');
+const { getRichError } = require('@mimik/response-helper');
 
 const { requestTypes, identifyRequest } = require('./requestIdentifier');
 const { SERVER_TYPE, LOG_TYPE, saveLog } = require('../../models/nodeDetailsModel');
@@ -23,7 +23,9 @@ const {
 
 const adjustContentLength = (dockerResponse) => {
   if (!dockerResponse.headers['content-length']) return dockerResponse;
+
   const updatedResponse = dockerResponse;
+  delete updatedResponse['transfer-encoding'];
   updatedResponse.headers['content-length'] = updatedResponse.data[0].length;
   return updatedResponse;
 };
@@ -54,13 +56,16 @@ const createImage = (nodeId, formattedRequest, { user, image, tag }, correlation
 const fetchAllContainers = (nodeId, formattedRequest, correlationId) => dockerRequest(nodeId, formattedRequest, correlationId)
   .then((dockerResponse) => mdeployFetchContainers(nodeId, correlationId)
     .then((mdeployResponse) => {
-      const dockerContainers = JSON.parse(dockerResponse.data[0]);
+      let dockerContainers = JSON.parse(dockerResponse.data[0]);
+
+      if (dockerContainers.length === 1 && Object.keys(dockerContainers[0]).length === 0) dockerContainers = [];
+
       const mdeployContainers = mdeployResponse.map((container) => convertContainerResponseForFetchAll(nodeId, container, correlationId));
       const allContainers = [...dockerContainers, ...mdeployContainers];
 
       const completeResponse = { ...dockerResponse };
       completeResponse.data = [`${JSON.stringify(allContainers)}\n`];
-      return adjustContentLength(completeResponse);
+      return adjustContentLength(completeResponse, true);
     })
     .catch(() => dockerResponse));
 
@@ -101,20 +106,15 @@ const createContainer = (
       // TODO Create a separate function to get response object in this format
       const response = {};
 
-      try {
-        response.data = [`${JSON.stringify({
-          Id: mdeployResponse.id,
-          Warnings: [],
-        })}\n`];
-      }
-      catch (e) {
-        // TODO Handle this
-        console.log('===> error', e);
-      }
+      response.data = [`${JSON.stringify({
+        Id: mdeployResponse.id,
+        Warnings: [],
+      })}\n`];
 
       response.headers = {
         'Accept-Encoding': 'gzip',
         Connection: 'close',
+        'x-correlationId': correlationId,
       };
 
       response.status = {
@@ -163,6 +163,7 @@ const killContainer = (nodeId, containerId, formattedRequest, correlationId) => 
 const routeRequest = (nodeId, formattedRequest, correlationId) => identifyRequest(nodeId, formattedRequest, correlationId)
   .then((identifiedRequest) => {
     const { type, data } = identifiedRequest;
+
     saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.EDGEDAEMON_FACING, 'Incoming request identified', { identifiedRequest, formattedRequest }, correlationId);
 
     switch (type) {

@@ -2,7 +2,7 @@ const Promise = require('bluebird');
 const net = require('net');
 const fs = require('fs-extra');
 
-const { getCorrelationId } = require('@bananabread/request-helper');
+const { getCorrelationId } = require('@mimik/request-helper');
 
 const { socketsDir } = require('../../configuration/config');
 
@@ -145,7 +145,7 @@ function cleanup() {
       saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.EDGEDAEMON_FACING, 'Received shutdown request');
       terminateSocket(nodeId);
     })
-      .then(() => {
+      .finally(() => {
         process.exit(0);
       });
   }

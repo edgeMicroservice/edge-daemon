@@ -1,4 +1,4 @@
-const { setConfig } = require('@bananabread/configuration');
+const { setConfig } = require('@mimik/configuration');
 const pack = require('../../package.json');
 
 /**
@@ -14,11 +14,13 @@ const pack = require('../../package.json');
  * | EDGE_ENGINE_URL | Url for the edgeEngine (gateway) | http://localhost:8083 |
  * | EDGE_ENGINE_PROJECT_ID | mimik developer project id | | should be same for mdeploy
  * | EDGE_ENGINE_MDEPLOY_ENDPOINT | mdeploy endpoint | /mdeploy/v1 |
+ * | MDEPLOY_APIKEY | to to use to reach mdeploy | |
  * | SOCKETS_DIR | Directory to store/create unix sockets in | /var/tmp/oh/sockets |
  * | DOCKER_SOCKET_PATH | Path to the docker daemon socket | /var/run/docker.sock |
  * | SOCKET_LOGS_MAX_TOTAL | Maximum number of total socket communication logs persisted and served using api per node socket | 100 | logs are kept by newest (older gets deleted if max total number is hit)
  * | CONSOLE_LOG_SOCKET_COMMUNICATION | Whether to have socket communincation logs logged in the service console  | no | to enable set to: yes
  * | DOCKER_DEPLOYMENT_CONTAINER_ENV | Env var to add to docker container during deployment to set deployment location as docker instead of mdeploy | HZN_DEPLOYMENT_LOCATION=gatewayNode |
+ * | CONTAINER_LABEL_PREFIX | prefix to associate to the conatainer label | openhorizon.anax
  *
  * These values are on top of what is needed in the [configuration](https://bitbucket.org/mimiktech/configuration) library.
  *
@@ -30,11 +32,14 @@ module.exports = (() => {
   const edgeEngineProjectId = process.env.EDGE_ENGINE_PROJECT_ID;
   const edgeEngineMdeployEndpoint = process.env.EDGE_ENGINE_MDEPLOY_ENDPOINT || '/mdeploy/v1';
 
+  // eslint-disable-next-line @mimik/document-env/validate-document-env
+  const homeDir = process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
+
   const configuration = setConfig(pack, {
     dependencies: {
       MDEPLOY: {
         url: `${edgeEngineUrl}/${edgeEngineProjectId}${edgeEngineMdeployEndpoint}`,
-        audience: process.env.MDEPLOY_AUDIENCE,
+        apiKey: process.env.MDEPLOY_APIKEY,
       },
     },
     custom: {
@@ -43,7 +48,7 @@ module.exports = (() => {
         projectId: edgeEngineProjectId,
         mdeployEndpoint: edgeEngineMdeployEndpoint,
       },
-      socketsDir: process.env.SOCKETS_DIR || '/var/tmp/oh/sockets',
+      socketsDir: process.env.SOCKETS_DIR || `${homeDir}/oh/sockets`,
       dockerSocketPath: process.env.DOCKER_SOCKET_PATH || '/var/run/docker.sock',
       socketLogsMaxTotal: parseInt(process.env.SOCKET_LOGS_MAX_TOTAL, 10) || 100,
       consoleLogSocketCommunication: process.env.CONSOLE_LOG_SOCKET_COMMUNICATION === 'yes',
