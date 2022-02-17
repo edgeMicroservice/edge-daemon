@@ -11,28 +11,6 @@ const {
   dockerFetchAllContainerSample,
 } = require('./samples');
 
-const SERVICE_NAME_LABEL = '.service_name';
-const AGREEMENT_ID_LABEL = '.agreement_id';
-
-// const addLabels = (dockerResponse, mdeployResponse) => {
-//   const updatedResponse = { ...dockerResponse };
-
-//   const [agreementId, serviceName] = mdeployResponse.name.split('-');
-
-//   const newLabels = {};
-//   newLabels[`${containerLabelPrefix}${SERVICE_NAME_LABEL}`] = serviceName;
-//   newLabels[`${containerLabelPrefix}${AGREEMENT_ID_LABEL}`] = agreementId;
-
-//   if (updatedResponse.Config && updatedResponse.Config.Labels) {
-//     updatedResponse.Config.Labels = { ...updatedResponse.Config.Labels, ...newLabels };
-//   }
-//   else {
-//     updatedResponse.Labels = { ...updatedResponse.Labels, ...newLabels };
-//   }
-
-//   return updatedResponse;
-// };
-
 const convertContainerResponse = (sampleResponse, mdeployResponse) => {
   const convertedResponse = { ...sampleResponse };
 

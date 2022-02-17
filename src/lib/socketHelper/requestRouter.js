@@ -58,21 +58,16 @@ const fetchAllContainers = (nodeId, formattedRequest, correlationId) => dockerRe
     .then((mdeployResponse) => {
       let dockerContainers = JSON.parse(dockerResponse.data[0]);
 
-      console.log('===> dockerContainers', dockerContainers);
-
       if (dockerContainers.length === 1 && Object.keys(dockerContainers[0]).length === 0) dockerContainers = [];
 
       const mdeployContainers = mdeployResponse.map((container) => convertContainerResponseForFetchAll(nodeId, container, correlationId));
       const allContainers = [...dockerContainers, ...mdeployContainers];
 
-      console.log('===> allContainers', allContainers);
-
       const completeResponse = { ...dockerResponse };
       completeResponse.data = [`${JSON.stringify(allContainers)}\n`];
       return adjustContentLength(completeResponse, true);
     })
-    .catch((error) => {
-      console.log('===> not possible', error);
+    .catch(() => {
       return dockerResponse;
     }));
 
@@ -121,7 +116,6 @@ const createContainer = (
       }
       catch (e) {
         // TODO Handle this
-        console.log('===> error', e);
       }
 
       response.headers = {
@@ -176,8 +170,6 @@ const killContainer = (nodeId, containerId, formattedRequest, correlationId) => 
 const routeRequest = (nodeId, formattedRequest, correlationId) => identifyRequest(nodeId, formattedRequest, correlationId)
   .then((identifiedRequest) => {
     const { type, data } = identifiedRequest;
-    console.log('===> formattedRequest', formattedRequest);
-    console.log('===> identifiedRequest', identifiedRequest);
 
     saveLog(nodeId, LOG_TYPE.INFO, SERVER_TYPE.EDGEDAEMON_FACING, 'Incoming request identified', { identifiedRequest, formattedRequest }, correlationId);
 
